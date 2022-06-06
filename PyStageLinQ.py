@@ -5,6 +5,7 @@ License TBD
 import select
 import socket
 import time
+from random import randbytes
 
 class PyStageLinQ:
 
@@ -17,8 +18,20 @@ class PyStageLinQ:
     MAGICFLAGNOTFOUND   = 201
 
 
+    TOKENLENGTH                     = 16
+    FRAMEIDLENGTH                   = 4
+    # Message ID's:
+    serviceAnnouncementMessageID    = 0
+    referenceMessageID              = 1
+    servicesRequestMessage          = 2
+
+
     def __init__(self):
+        self.ownToken = randbytes(self.TOKENLENGTH)
         pass
+
+    def announceSelf(self):
+        
 
     def discoverStageLinQDevice(self, timeout = 10):
         """
@@ -40,11 +53,10 @@ class PyStageLinQ:
             dataAvailable = select.select([discoverSocket], [], [], loop_timeout - time.time() )
             if dataAvailable[0]:
                 data, addr = discoverSocket.recvfrom(DiscoverBufferSize)
-                print("received message: %s" % data)
                 if self.STAGELINQOK != self.decodeDiscoveryFrame(data) :
                     continue
-
-                #self.connectToStageLinQDevice(addr[0], addr[1])
+                print(addr[1])
+                self.connectToStageLinQDevice(addr[0])
 
 
             if time.time() > loop_timeout:
@@ -59,7 +71,7 @@ class PyStageLinQ:
         MagicFlagLength         = 4
         MagicFlagStop           = MagicFlagStart + MagicFlagLength
         TokenStart              = MagicFlagStop
-        TokenLength             = 16
+        TokenLength             = self.TOKENLENGTH
         TokenStop               = TokenStart + TokenLength
         DeviceNameSizeStart     = TokenStop
         PortLength              = 2
@@ -75,17 +87,14 @@ class PyStageLinQ:
 
         self.token = Frame[TokenStart:TokenStop]
 
-
-
-
         ConnectionTypeStart, DeviceName = self.ReadBytesFromFrame(Frame, DeviceNameSizeStart)
         SwNameStart, ConnectionType = self.ReadBytesFromFrame(Frame, ConnectionTypeStart)
         SwVersionStart, SwName = self.ReadBytesFromFrame(Frame, SwNameStart)
         PortStart, SwVersion = self.ReadBytesFromFrame(Frame, SwVersionStart)
         PortStop = PortStart + PortLength
-        Port = int.from_bytes(Frame[PortStart:PortStop], byteorder='big')
+        self.Port = int.from_bytes(Frame[PortStart:PortStop], byteorder='big')
 
-        print(f"Device: {DeviceName}, ConnectionType: {ConnectionType}, SwName: {SwName}, SwVersion: {SwVersion}, Port: {Port}")
+        print(f"Found Device: {DeviceName}, ConnectionType: {ConnectionType}, SwName: {SwName}, SwVersion: {SwVersion}, Port: {self.Port}")
         return self.STAGELINQOK
 
     def ReadBytesFromFrame(self, Frame, StartOffset):
@@ -102,13 +111,20 @@ class PyStageLinQ:
             # Out of bounds
             return
 
-        return DataStop, Frame[DataStart:DataStop].decode(encoding='UTF-8')
+        return DataStop, Frame[DataStart:DataStop].decode(encoding='UTF-16be')
 
-    def connectToStageLinQDevice(self, ip, port):
+    def connectToStageLinQDevice(self, ip):
 
 
         self.StageLinQSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.StageLinQSocket.connect(ip, port)
+        self.StageLinQSocket.connect((ip, self.Port))
+        reference_message = self.servicesRequestMessage.to_bytes(self.FRAMEIDLENGTH, byteorder='big')
+        reference_message += self.token
+        self.StageLinQSocket.send(reference_message)
+        self.StageLinQSocket.recvfrom(1024)
+
+        pass
+
 
         pass
 
@@ -116,4 +132,4 @@ class PyStageLinQ:
 if __name__ == "__main__":
     # Test code for class
     StageLinQ = PyStageLinQ()
-    StageLinQ.discoverStageLinQDevice(timeout=1)
+    StageLinQ.discoverStageLinQDevice(timeout=5)
