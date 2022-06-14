@@ -37,5 +37,5 @@ class StageLinQReferenceData:
 
 
 @dataclass
-class StageLinQServiceRequestData:
+class StageLinQServiceRequestService:
     Token: StageLinQToken
