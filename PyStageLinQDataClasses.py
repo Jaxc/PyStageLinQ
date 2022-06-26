@@ -39,3 +39,14 @@ class StageLinQReferenceData:
 @dataclass
 class StageLinQServiceRequestService:
     Token: StageLinQToken
+
+
+@dataclass
+class StageLinQStateMapData:
+    BlockLength: int
+    MagicFlag: str
+    MagicFlag2: str
+    ParameterLength: int
+    ParameterName: str
+    ValueLength: int
+    ParameterValue: str

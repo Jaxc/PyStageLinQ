@@ -4,21 +4,126 @@
 This code is licensed under MIT license (see LICENSE for details)
 """
 
+from dataclasses import dataclass
+import asyncio
+
+import PyStageLinQDataClasses
+from PyStageLinQMessageClasses import StageLinQServiceAnnouncement, StageLinQMessage
+from PyStageLinQDataClasses import StageLinQServiceAnnouncementData
+import json
 
 prime_go = {
-    "EngineDeck1Play": "/Engine/Deck1/Play",
-    "EngineDeck1PlayState": "/Engine/Deck1/PlayState",
-    "EngineDeck1PlayStatePath": "/Engine/Deck1/PlayStatePath",
+    "ClientLibrarianDevicesControllerCurrentDevice" : "/Client/Librarian/DevicesController/CurrentDevice",
+    "ClientLibrarianDevicesControllerHasSDCardConnected" : "/Client/Librarian/DevicesController/HasSDCardConnected",
+    "ClientLibrarianDevicesControllerHasUsbDeviceConnected" : "/Client/Librarian/DevicesController/HasUsbDeviceConnected",
+    "ClientPreferencesLayerB" : "/Client/Preferences/LayerB",
+    "ClientPreferencesPlayer" : "/Client/Preferences/Player",
+    "ClientPreferencesProfileApplicationPlayerColor1" : "/Client/Preferences/Profile/Application/PlayerColor1",
+    "ClientPreferencesProfileApplicationPlayerColor1A" : "/Client/Preferences/Profile/Application/PlayerColor1A",
+    "ClientPreferencesProfileApplicationPlayerColor1B" : "/Client/Preferences/Profile/Application/PlayerColor1B",
+    "ClientPreferencesProfileApplicationPlayerColor2" : "/Client/Preferences/Profile/Application/PlayerColor2",
+    "ClientPreferencesProfileApplicationPlayerColor2A" : "/Client/Preferences/Profile/Application/PlayerColor2A",
+    "ClientPreferencesProfileApplicationPlayerColor2B" : "/Client/Preferences/Profile/Application/PlayerColor2B",
+    "ClientPreferencesProfileApplicationPlayerColor3A" : "/Client/Preferences/Profile/Application/PlayerColor3A",
+    "ClientPreferencesProfileApplicationPlayerColor3B" : "/Client/Preferences/Profile/Application/PlayerColor3B",
+    "ClientPreferencesProfileApplicationPlayerColor4A" : "/Client/Preferences/Profile/Application/PlayerColor4A",
+    "ClientPreferencesProfileApplicationPlayerColor4B" : "/Client/Preferences/Profile/Application/PlayerColor4B",
+    "ClientPreferencesProfileApplicationSyncMode" : "/Client/Preferences/Profile/Application/SyncMode",
+    "EngineDeck1CurrentBPM" : "/Engine/Deck1/CurrentBPM",
+    "EngineDeck1ExternalMixerVolume" : "/Engine/Deck1/ExternalMixerVolume",
+    "EngineDeck1ExternalScratchWheelTouch" : "/Engine/Deck1/ExternalScratchWheelTouch",
+    "EngineDeck1PadsView" : "/Engine/Deck1/Pads/View",
+    "EngineDeck1Play" : "/Engine/Deck1/Play",
+    "EngineDeck1PlayState" : "/Engine/Deck1/PlayState",
+    "EngineDeck1Speed" : "/Engine/Deck1/Speed",
+    "EngineDeck1SpeedNeutral" : "/Engine/Deck1/SpeedNeutral",
+    "EngineDeck1SpeedOffsetDown" : "/Engine/Deck1/SpeedOffsetDown",
+    "EngineDeck1SpeedOffsetUp" : "/Engine/Deck1/SpeedOffsetUp",
+    "EngineDeck1SpeedRange" : "/Engine/Deck1/SpeedRange",
+    "EngineDeck1SpeedState" : "/Engine/Deck1/SpeedState",
+    "EngineDeck1SyncMode" : "/Engine/Deck1/SyncMode",
     "EngineDeck1TrackArtistName" : "/Engine/Deck1/Track/ArtistName",
+    "EngineDeck1TrackBleep" : "/Engine/Deck1/Track/Bleep",
+    "EngineDeck1TrackCuePosition" : "/Engine/Deck1/Track/CuePosition",
+    "EngineDeck1TrackCurrentBPM" : "/Engine/Deck1/Track/CurrentBPM",
+    "EngineDeck1TrackCurrentKeyIndex" : "/Engine/Deck1/Track/CurrentKeyIndex",
+    "EngineDeck1TrackCurrentLoopInPosition" : "/Engine/Deck1/Track/CurrentLoopInPosition",
+    "EngineDeck1TrackCurrentLoopOutPosition" : "/Engine/Deck1/Track/CurrentLoopOutPosition",
+    "EngineDeck1TrackCurrentLoopSizeInBeats" : "/Engine/Deck1/Track/CurrentLoopSizeInBeats",
+    "EngineDeck1TrackKeyLock" : "/Engine/Deck1/Track/KeyLock",
+    "EngineDeck1TrackLoopEnableState" : "/Engine/Deck1/Track/LoopEnableState",
+    "EngineDeck1TrackLoopQuickLoop1" : "/Engine/Deck1/Track/Loop/QuickLoop1",
+    "EngineDeck1TrackLoopQuickLoop2" : "/Engine/Deck1/Track/Loop/QuickLoop2",
+    "EngineDeck1TrackLoopQuickLoop3" : "/Engine/Deck1/Track/Loop/QuickLoop3",
+    "EngineDeck1TrackLoopQuickLoop4" : "/Engine/Deck1/Track/Loop/QuickLoop4",
+    "EngineDeck1TrackLoopQuickLoop5" : "/Engine/Deck1/Track/Loop/QuickLoop5",
+    "EngineDeck1TrackLoopQuickLoop6" : "/Engine/Deck1/Track/Loop/QuickLoop6",
+    "EngineDeck1TrackLoopQuickLoop7" : "/Engine/Deck1/Track/Loop/QuickLoop7",
+    "EngineDeck1TrackLoopQuickLoop8" : "/Engine/Deck1/Track/Loop/QuickLoop8",
+    "EngineDeck1TrackPlayPauseLEDState" : "/Engine/Deck1/Track/PlayPauseLEDState",
+    "EngineDeck1TrackSampleRate" : "/Engine/Deck1/Track/SampleRate",
+    "EngineDeck1TrackSongAnalyzed" : "/Engine/Deck1/Track/SongAnalyzed",
+    "EngineDeck1TrackSongLoaded" : "/Engine/Deck1/Track/SongLoaded",
     "EngineDeck1TrackSongName" : "/Engine/Deck1/Track/SongName",
+    "EngineDeck1TrackSoundSwitchGUID" : "/Engine/Deck1/Track/SoundSwitchGuid",
+    "EngineDeck1TrackTrackBytes" : "/Engine/Deck1/Track/TrackBytes",
+    "EngineDeck1TrackTrackData" : "/Engine/Deck1/Track/TrackData",
+    "EngineDeck1TrackTrackLength" : "/Engine/Deck1/Track/TrackLength",
     "EngineDeck1TrackTrackName" : "/Engine/Deck1/Track/TrackName",
-
-    "EngineDeck2Play": "/Engine/Deck1/Play",
-    "EngineDeck2PlayState": "/Engine/Deck1/PlayState",
-    "EngineDeck2PlayStatePath": "/Engine/Deck1/PlayStatePath",
-    "EngineDeck2TrackArtistName": "/Engine/Deck1/Track/ArtistName",
-    "EngineDeck2TrackSongName": "/Engine/Deck1/Track/SongName",
-    "EngineDeck2TrackTrackName": "/Engine/Deck1/Track/TrackName",
+    "EngineDeck1TrackTrackNetworkPath" : "/Engine/Deck1/Track/TrackNetworkPath",
+    "EngineDeck1TrackTrackURI" : "/Engine/Deck1/Track/TrackUri",
+    "EngineDeck1TrackTrackWasPlayed" : "/Engine/Deck1/Track/TrackWasPlayed",
+    "EngineDeck2CurrentBPM" : "/Engine/Deck2/CurrentBPM",
+    "EngineDeck2ExternalMixerVolume" : "/Engine/Deck2/ExternalMixerVolume",
+    "EngineDeck2ExternalScratchWheelTouch" : "/Engine/Deck2/ExternalScratchWheelTouch",
+    "EngineDeck2PadsView" : "/Engine/Deck2/Pads/View",
+    "EngineDeck2Play" : "/Engine/Deck2/Play",
+    "EngineDeck2PlayState" : "/Engine/Deck2/PlayState",
+    "EngineDeck2Speed" : "/Engine/Deck2/Speed",
+    "EngineDeck2SpeedNeutral" : "/Engine/Deck2/SpeedNeutral",
+    "EngineDeck2SpeedOffsetDown" : "/Engine/Deck2/SpeedOffsetDown",
+    "EngineDeck2SpeedOffsetUp" : "/Engine/Deck2/SpeedOffsetUp",
+    "EngineDeck2SpeedRange" : "/Engine/Deck2/SpeedRange",
+    "EngineDeck2SpeedState" : "/Engine/Deck2/SpeedState",
+    "EngineDeck2SyncMode" : "/Engine/Deck2/SyncMode",
+    "EngineDeck2TrackArtistName" : "/Engine/Deck2/Track/ArtistName",
+    "EngineDeck2TrackBleep" : "/Engine/Deck2/Track/Bleep",
+    "EngineDeck2TrackCuePosition" : "/Engine/Deck2/Track/CuePosition",
+    "EngineDeck2TrackCurrentBPM" : "/Engine/Deck2/Track/CurrentBPM",
+    "EngineDeck2TrackCurrentKeyIndex" : "/Engine/Deck2/Track/CurrentKeyIndex",
+    "EngineDeck2TrackCurrentLoopInPosition" : "/Engine/Deck2/Track/CurrentLoopInPosition",
+    "EngineDeck2TrackCurrentLoopOutPosition" : "/Engine/Deck2/Track/CurrentLoopOutPosition",
+    "EngineDeck2TrackCurrentLoopSizeInBeats" : "/Engine/Deck2/Track/CurrentLoopSizeInBeats",
+    "EngineDeck2TrackKeyLock" : "/Engine/Deck2/Track/KeyLock",
+    "EngineDeck2TrackLoopEnableState" : "/Engine/Deck2/Track/LoopEnableState",
+    "EngineDeck2TrackLoopQuickLoop1" : "/Engine/Deck2/Track/Loop/QuickLoop1",
+    "EngineDeck2TrackLoopQuickLoop2" : "/Engine/Deck2/Track/Loop/QuickLoop2",
+    "EngineDeck2TrackLoopQuickLoop3" : "/Engine/Deck2/Track/Loop/QuickLoop3",
+    "EngineDeck2TrackLoopQuickLoop4" : "/Engine/Deck2/Track/Loop/QuickLoop4",
+    "EngineDeck2TrackLoopQuickLoop5" : "/Engine/Deck2/Track/Loop/QuickLoop5",
+    "EngineDeck2TrackLoopQuickLoop6" : "/Engine/Deck2/Track/Loop/QuickLoop6",
+    "EngineDeck2TrackLoopQuickLoop7" : "/Engine/Deck2/Track/Loop/QuickLoop7",
+    "EngineDeck2TrackLoopQuickLoop8" : "/Engine/Deck2/Track/Loop/QuickLoop8",
+    "EngineDeck2TrackPlayPauseLEDState" : "/Engine/Deck2/Track/PlayPauseLEDState",
+    "EngineDeck2TrackSampleRate" : "/Engine/Deck2/Track/SampleRate",
+    "EngineDeck2TrackSongAnalyzed" : "/Engine/Deck2/Track/SongAnalyzed",
+    "EngineDeck2TrackSongLoaded" : "/Engine/Deck2/Track/SongLoaded",
+    "EngineDeck2TrackSongName" : "/Engine/Deck2/Track/SongName",
+    "EngineDeck2TrackSoundSwitchGUID" : "/Engine/Deck2/Track/SoundSwitchGuid",
+    "EngineDeck2TrackTrackBytes" : "/Engine/Deck2/Track/TrackBytes",
+    "EngineDeck2TrackTrackData" : "/Engine/Deck2/Track/TrackData",
+    "EngineDeck2TrackTrackLength" : "/Engine/Deck2/Track/TrackLength",
+    "EngineDeck2TrackTrackName" : "/Engine/Deck2/Track/TrackName",
+    "EngineDeck2TrackTrackNetworkPath" : "/Engine/Deck2/Track/TrackNetworkPath",
+    "EngineDeck2TrackTrackURI" : "/Engine/Deck2/Track/TrackUri",
+    "EngineDeck2TrackTrackWasPlayed" : "/Engine/Deck2/Track/TrackWasPlayed",
+    "EngineDeck3CurrentBPM"
+    "EngineDeckCount" : "/Engine/DeckCount",
+    "MixerCH1faderPosition" : "/Mixer/CH1faderPosition",
+    "MixerCH2faderPosition" : "/Mixer/CH2faderPosition",
+    "MixerCH3faderPosition" : "/Mixer/CH3faderPosition",
+    "MixerCH4faderPosition" : "/Mixer/CH4faderPosition",
+    "MixerCrossfaderPosition" : "/Mixer/CrossfaderPosition",
 }
 
 common_functions = {
@@ -229,3 +334,124 @@ common_functions = {
     "MixerCH4faderPosition" : "/Mixer/CH4faderPosition",
     "MixerCrossfaderPosition" : "/Mixer/CrossfaderPosition",
 }
+
+@dataclass
+class ServiceHandle:
+    device: str
+    ip: int
+    service: str
+    port: int
+
+
+
+class StateMapSubscription:
+
+    def __init__(self, service_handle, data_callback, subscription_list):
+        self.service_handle: ServiceHandle = service_handle
+        self._callback = data_callback
+        self._subscription_list = subscription_list
+        self.reader = None
+        self.writer = None
+        self.state_map_task = None
+
+    def get_task(self):
+        return self.state_map_task
+
+    async def read_state_map(self):
+
+        trailing_data = bytearray()
+        while True:
+            # Massive buffer because I have not figured out how to handle messages over multiple buffers
+            frame = await self.reader.read(8192 * 4)
+
+            # Add data from last received frame
+            frame = trailing_data + frame
+            trailing_data = bytearray()
+
+            if len(frame) == 0:
+                return
+
+            blocks = self.decode_multi_block(frame)
+
+            if len(blocks[-1]) < 4:
+                trailing_data = blocks[-1]
+
+            if len(blocks[-1]) != int.from_bytes(blocks[-1][0:4], byteorder='big') + 4:
+                # Last block not completely received
+                trailing_data = blocks.pop()
+
+            received_fields = []
+            for block in blocks:
+                received_fields.append(self.verify_block(block))
+
+            if self._callback is not None:
+                pass
+                self._callback(received_fields)
+
+
+
+    @staticmethod
+    def decode_multi_block(frame):
+        blocks = []
+        while len(frame) > 4:
+            block_len = int.from_bytes(frame[0:4], byteorder='big') + 4
+            blocks.append(frame[0:block_len])
+            frame = frame[block_len:]
+
+        if len(frame) > 0:
+            # Frame not completely received, appending trailing block
+            blocks.append(frame)
+
+        return blocks
+
+    def verify_block(self, block):
+
+        if len(block) < 4:
+            raise Exception("Block is to short to contain length")
+
+        block_length = int.from_bytes(block[0:4], byteorder='big')
+
+        # Note: -4 is needed as block_length does not include its own length.
+        if len(block) - 4 != block_length:
+            raise Exception("Block invalid: Block length inconsistent with its header")
+
+        magic_flag = block[4:8].decode()
+
+        if magic_flag != "smaa":
+            raise Exception("Block invalid: Could not find magic flag")
+
+        # Magic flag 2 is not checked as I have no idea what it is, it is all 0's for my PrimeGo, but it seems to be
+        # different in the Go implementation
+        magic_flag2 = block[8:12]
+
+        path_len = int.from_bytes(block[12:16], byteorder='big')
+        value_len_offset = 16+path_len
+        path = block[16:value_len_offset].decode(encoding='UTF-16be')
+
+        value_offset = value_len_offset + 4
+        value_len = int.from_bytes(block[value_len_offset:value_offset], byteorder='big')
+
+        value = json.loads(block[value_offset:value_offset+value_len].decode(encoding='UTF-16be'))
+
+        return PyStageLinQDataClasses.StageLinQStateMapData(block_length, magic_flag, magic_flag2, path_len,
+                                                            path, value_len, value)
+
+    async def Subscribe(self, own_token):
+        self.reader,  self.writer = await asyncio.open_connection(self.service_handle.ip, self.service_handle.port)
+        self.writer.write(StageLinQServiceAnnouncement().encode(
+            StageLinQServiceAnnouncementData(Token=own_token, Service=self.service_handle.service,
+                                             Port=self.writer.transport.get_extra_info('sockname')[1])))
+        await self.writer.drain()
+
+        self.state_map_task = asyncio.create_task(self.read_state_map())
+
+        for service in self._subscription_list.values():
+            msg = (len(service) * 2 + 8 * 2).to_bytes(4, byteorder='big')
+            msg += bytearray([0x73, 0x6d, 0x61, 0x61])
+            msg += bytearray([0x00, 0x00, 0x07, 0xd2])
+            msg += StageLinQMessage().WriteNetworkString(service)
+            msg += (0).to_bytes(4, byteorder='big')
+            self.writer.write(msg)
+            await self.writer.drain()
+        # small sleep to actually send frame
+        await asyncio.sleep(0.001)

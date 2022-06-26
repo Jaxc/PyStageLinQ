@@ -6,6 +6,9 @@ This code is licensed under MIT license (see LICENSE for details)
 from ErrorCodes import *
 from PyStageLinQDataClasses import *
 
+class ConnectionTypes:
+    HOWDY = "DISCOVERER_HOWDY_"
+    EXIT = "DISCOVERER_EXIT_"
 
 class StageLinQMessage:
     port_length = 2
