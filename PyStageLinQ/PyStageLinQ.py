@@ -7,12 +7,12 @@ import socket
 import time
 import asyncio
 
-import PyStageLinQDevice
-from PyStageLinQMessageClasses import *
-from PyStageLinQDataClasses import *
-from ErrorCodes import PyStageLinQError
-from PyStageLinQNetwork import StageLinQService
-import EngineServices
+from . import Device
+from .MessageClasses import *
+from .DataClasses import *
+from .ErrorCodes import PyStageLinQError
+from .Network import StageLinQService
+from . import EngineServices
 
 
 class PyStageLinQ:
@@ -28,7 +28,7 @@ class PyStageLinQ:
                                                      ConnectionType=ConnectionTypes.HOWDY, SwName="Python",
                                                      SwVersion="1.0.0", ReqServicePort=self.REQUESTSERVICEPORT)
 
-        self.device_list = PyStageLinQDevice.DeviceList()
+        self.device_list = Device.DeviceList()
 
         self.tasks = set()
         self.found_services = []

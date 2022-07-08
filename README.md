@@ -1,8 +1,82 @@
-# PyStageLinQ
-A project that will hopefully end with a Python implementation of a StageLinQ host
+# Overview
+This Python module decodes part of the StageLinQ protocol used by Denon DJ equipment. In its current state it is
+possible to read out information like track information, fader position (Crossfader, channel volume, pitchfader), BPM 
+etc. The project also includes [a description of how StageLinQ works](./StageLinQ_protocol.md) taking from my findings
+as well as other code available.
+
+This module can be used to receive this information from a device via a callback when data is available.
+
+There is also a Wireshark Dissector that I made during my trials.
 
 # Status
-Currently, work is ongoing with analyzing the StageLinQ protocol.
+An initial implementation of parts of the protocol has been done, but there is still much left to do. As the code should
+be at least somewhat functional I've decided to release this as is and add functionality along the way. Since I'm unsure
+where this is heading there is a possibility that there will be a future (major) version that will reimagine the 
+functions completely.
+
+The next few versions will probably be patched to bring the documentation up to date.
+
+# Example usage
+Here follow an example of how PyStageLinQ can be used, and 
+
+```python
+from PyStageLinQ import EngineServices, PyStageLinQ
+PrimeGo = None
+
+# Callback for when PyStageLinQ as found a StageLinQ device. This will print out information about the found device
+# and if lets the user decide if they want to subscribe to a service or not.
+
+def new_device_found_callback(ip, discovery_frame, service_list):
+    # Print device info and supplied services
+    print(
+        f"Found new Device on ip {ip}: Device name: {discovery_frame.device_name}, ConnectionType: {discovery_frame.connection_type}, SwName: {discovery_frame.sw_name}, "
+        f"SwVersion: {discovery_frame.sw_version}, port: {discovery_frame.Port}")
+
+    if len(service_list) > 0:
+        print("Services found in device:")
+    else:
+        print("No services found")
+
+    for service in service_list:
+         print(f"\t{service.service} on port {service.port}")
+
+
+    # Request StateMap service
+    for service in service_list:
+        if service.service == "StateMap":
+            PrimeGo.subscribe_to_statemap(service, EngineServices.prime_go, state_map_data_print)
+
+            
+# Callback for when data has arrived from a StageLinQ device. It is up to the user what to do with this information.
+            
+def state_map_data_print(data):
+    for message in data:
+        print(message)
+
+# Example main function, starting PyStageLinQ.
+if __name__ == "__main__":
+        global PrimeGo
+    PrimeGo = PyStageLinQ.PyStageLinQ(new_device_found_callback, name="Jaxcie StagelinQ")
+    PrimeGo.start()
+```
+
+# Wireshark dissector
+When I developed this code I made a WireShark Dissector, it is included in this repo. Do note that this dissector 
+isn't properly tested and may cause unexpected issues. As this file is not part of the Pythoncode in PyStageLinQ it can
+be found on [GitHub](https://github.com/Jaxc/PyStageLinQ/blob/main/tools/StageLinQ.lua)
+
+# Knows issues
+There are currently one known issue:
+
+## PyStageLinq cannot connect to device
+For some reason that I cannot figure out PyStageLinQ cannot connect to my Prime Go sometimes. This seems to be
+completely random and is because the device does not send a table of services when requested
+
+# Change log
+1.0.0 Inital release
+
+# Compatability
+PyStageLinQ has been tested with a Denon DJ Prime Go on Windows 10 and Linux (Mint 20.3) with Python 3.10. 
 
 # Acknowledgements
 Big thanks to icedream for his implementation of StageLinQ in go:

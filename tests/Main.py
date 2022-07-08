@@ -2,8 +2,7 @@
 (c) 2022 Jaxcie
 This code is licensed under MIT license (see LICENSE for details)
 """
-import EngineServices
-from PyStageLinQ import PyStageLinQ
+from PyStageLinQ import EngineServices, PyStageLinQ
 
 """
 Processes needed for StageLinQ:

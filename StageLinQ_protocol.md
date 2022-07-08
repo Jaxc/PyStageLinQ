@@ -1,5 +1,5 @@
 # StageLinQ protocol
-StageLinQ is a protocol for sharing information from Denon DJ equpment. 
+StageLinQ is a protocol for sharing information from Denon DJ equipment. 
 This can be used to display information about playing tracks, if deck is playing or not.
 
 ## Preface
@@ -14,7 +14,7 @@ In this document the following words are used as this:
 *StageLinQ device*: This is used to describe a device that output StageLinQ information,
 examples of this could be a Denon DJ Prime Go.
 *Host*: This is used to describe the machine that uses the information that the 
-StageLinQ device outputs, i.e. a computer runnon PyStageLinQ
+StageLinQ device outputs, i.e. a computer running PyStageLinQ
 
 ## Ethernet configuration
 The StageLinQ device will pick a random IP in the range 169.254.0.0/16.
@@ -25,7 +25,8 @@ It is very possible that the StageLinQ device can be assigned an IP by DHCP, but
 have not tested this.
 
 ## Device discovery
-When no connection with a host has been established the DJ device will send out.
+When no connection with a host has been established the DJ device will send out a broadcast message to 
+IP 255.255.255.255.
 These requests are sent to UDP port 51337. The source port of these request seems 
 to be randomized. A StageLinQ device seems to output several discovery 
 frames each second.

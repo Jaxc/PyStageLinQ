@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "PyStageLinQ"
+version = "1.1.1"
+authors = [
+  { email="jaxc@skrooter.com" },
+]
+description = "A Python implementation of a StagelinQ protocol"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Multimedia :: Sound/Audio ",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+]
+keywords = ["StageLinQ", "DJ", "VJ", "Denon DJ", "Prime Go", "Streaming"]
+
+[project.urls]
+"Homepage" = "https://github.com/Jaxc/PyStageLinQ"
+"Bug Tracker" = "https://github.com/Jaxc/PyStageLinQ/issues"
+"Funding" = "https://ko-fi.com/jaxcie"
