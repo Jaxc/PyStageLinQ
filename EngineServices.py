@@ -7,9 +7,9 @@ This code is licensed under MIT license (see LICENSE for details)
 from dataclasses import dataclass
 import asyncio
 
-import PyStageLinQDataClasses
-from PyStageLinQMessageClasses import StageLinQServiceAnnouncement, StageLinQMessage
-from PyStageLinQDataClasses import StageLinQServiceAnnouncementData
+from PyStageLinQ import PyStageLinQDataClasses
+from PyStageLinQ.PyStageLinQMessageClasses import StageLinQServiceAnnouncement, StageLinQMessage
+from PyStageLinQ.PyStageLinQDataClasses import StageLinQServiceAnnouncementData
 import json
 
 prime_go = {

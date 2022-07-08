@@ -3,7 +3,7 @@
 This code is licensed under MIT license (see LICENSE for details)
 """
 import EngineServices
-import PyStageLinQ
+from PyStageLinQ import PyStageLinQ
 
 """
 Processes needed for StageLinQ:
