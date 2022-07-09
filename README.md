@@ -16,8 +16,19 @@ functions completely.
 
 The next few versions will probably be patched to bring the documentation up to date.
 
+# Documentation
+Documentation is available on [readthedocs.io](https://pystagelinq.readthedocs.io/en/latest/)
+
+# Installation
+`pip install PyStageLinQ`
+
+
+# Issue tracking
+If you find an issue, please report check known issues, and if the issue is not mentioned please report it 
+[here](https://github.com/Jaxc/PyStageLinQ)
+
 # Example usage
-Here follow an example of how PyStageLinQ can be used, and 
+Here follow an example of how PyStageLinQ can be used:
 
 ```python
 from PyStageLinQ import EngineServices, PyStageLinQ
@@ -71,22 +82,3 @@ PyStageLinQ has been tested with a Denon DJ Prime Go on Windows 10 and Linux (Mi
 # Acknowledgements
 Big thanks to icedream for his implementation of StageLinQ in go:
 https://github.com/icedream/go-stagelinq
-
-# Change log
-Here follows a log of released versions of PyStageLinQ.
-## [0.1.0] Inital release
-Basic functionality done, but documentation needs to be done. I expect the API to change when I write this, so this is
-a pre-release until Documentation is in place.
-### Added
-Everything
-### Changes
-Yes
-### Fixed
-Some things
-### Security
-No
-### Knows issues
-There are currently one known issue:
-#### PyStageLinq cannot connect to device
-For some reason that I cannot figure out PyStageLinQ cannot connect to my Prime Go sometimes. This seems to be
-completely random and is because the device does not send a table of services when requested
