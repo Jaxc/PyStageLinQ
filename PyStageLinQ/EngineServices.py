@@ -433,7 +433,7 @@ class StateMapSubscription:
 
         value = json.loads(block[value_offset:value_offset+value_len].decode(encoding='UTF-16be'))
 
-        return PyStageLinQDataClasses.StageLinQStateMapData(block_length, magic_flag, magic_flag2, path_len,
+        return DataClasses.StageLinQStateMapData(block_length, magic_flag, magic_flag2, path_len,
                                                             path, value_len, value)
 
     async def Subscribe(self, own_token):
