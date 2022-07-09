@@ -63,7 +63,7 @@ if __name__ == "__main__":
 # Wireshark dissector
 When I developed this code I made a WireShark Dissector, it is included in this repo. Do note that this dissector 
 isn't properly tested and may cause unexpected issues. As this file is not part of the Pythoncode in PyStageLinQ it can
-be found on [GitHub](https://github.com/Jaxc/PyStageLinQ/blob/main/tools/StageLinQ.lua)
+be found on [GitHub](tools/StageLinQ.lua)
 
 # Knows issues
 There are currently one known issue:
@@ -73,7 +73,20 @@ For some reason that I cannot figure out PyStageLinQ cannot connect to my Prime 
 completely random and is because the device does not send a table of services when requested
 
 # Change log
-1.0.0 Inital release
+Here follows a log of released versions of PyStageLinQ.
+## [0.1.0] Inital release
+Basic functionality done, but documentation needs to be done. I expect the API to change when I write this, so this is
+a pre-release until Documentation is in place.
+### Added
+Everything
+### Changes
+Yes
+### Fixed
+Some things
+### Security
+No
+
+
 
 # Compatability
 PyStageLinQ has been tested with a Denon DJ Prime Go on Windows 10 and Linux (Mint 20.3) with Python 3.10. 
