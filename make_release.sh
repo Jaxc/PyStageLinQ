@@ -18,3 +18,6 @@ read -s PyPi_token
 echo
 
 twine upload dist/* -u __token__ -p $PyPi_token
+
+git tag $new_ver
+git push origin $new_ver
