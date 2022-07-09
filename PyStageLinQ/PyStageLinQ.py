@@ -6,6 +6,7 @@ import select
 import socket
 import time
 import asyncio
+from typing import Callable
 
 from . import Device
 from .MessageClasses import *
@@ -16,12 +17,24 @@ from . import EngineServices
 
 
 class PyStageLinQ:
+    """
+        The main object for PyStageLinQ. Use this object to first initialize and then start PyStageLinq
+
+        :param new_device_found_callback: This callback is used to report back to the application when a StageLinQ \
+        device has been detected on the network. It is then up to the application to determine what device has been \
+        and how if it wants to connect to it.
+
+        :param name: This is the name which PyStageLinQ will announce itself with on the StageLinQ protocol. If not set \
+        it defaults to "Hello StageLinQ World".
+
+    """
     REQUESTSERVICEPORT = 0  # If set to anything but 0 other StageLinQ devices will try to request services at said port
     StageLinQ_discovery_port = 51337
 
-    ANNOUNCE_IP ="169.254.255.255"
+    ANNOUNCE_IP = "169.254.255.255"
 
-    def __init__(self, new_device_found_callback, name="Hello StageLinQ World", ):
+    def __init__(self, new_device_found_callback: Callable[[str, StageLinQDiscovery, EngineServices.ServiceHandle], None],
+                 name: str = "Hello StageLinQ World"):
         self.name = name
         self.OwnToken = StageLinQToken()
         self.discovery_info = None
@@ -45,23 +58,27 @@ class PyStageLinQ:
         self.new_device_found_callback = new_device_found_callback
 
     def start(self):
-        asyncio.run(self.start_StageLinQ())
+        """
+Function for starting PyStageLinq. This function shall be called once the PyStageLinQ object has been initialized and
+will start a bunch of subprocesses.
+        """
+        asyncio.run(self._start_StageLinQ())
 
-    def stop(self):
+    def _stop(self):
         discovery = StageLinQDiscovery()
         discovery_frame = discovery.encode(StageLinQDiscoveryData(Token=self.OwnToken, DeviceName=self.name,
                                                                   ConnectionType=ConnectionTypes.EXIT, SwName="Python",
                                                                   SwVersion="1.0.0",
                                                                   ReqServicePort=self.REQUESTSERVICEPORT))
 
-        self.send_discovery_frame(discovery_frame)
+        self._send_discovery_frame(discovery_frame)
 
-    def announce_self(self):
-        Discovery = StageLinQDiscovery()
-        discovery_frame = Discovery.encode(self.discovery_info)
-        self.send_discovery_frame(discovery_frame)
+    def _announce_self(self):
+        discovery = StageLinQDiscovery()
+        discovery_frame = discovery.encode(self.discovery_info)
+        self._send_discovery_frame(discovery_frame)
 
-    def send_discovery_frame(self, discovery_frame):
+    def _send_discovery_frame(self, discovery_frame):
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as discovery_socket:
             discovery_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             try:
@@ -71,7 +88,7 @@ class PyStageLinQ:
                 raise Exception(
                     f"Cannot write to IP {self.ANNOUNCE_IP}, this error could be due to that there is no network cart set up with this IP range")
 
-    async def discover_StageLinQ_device(self, timeout=10):
+    async def _discover_StageLinQ_device(self, timeout=10):
         """
         This function is used to find StageLinQ device announcements.
         """
@@ -128,17 +145,19 @@ class PyStageLinQ:
                 print("No devices found within timeout")
                 return PyStageLinQError.DISCOVERYTIMEOUT
 
-
-
-
-
-    def subscribe_to_statemap(self, StateMapService, subscription_list, data_available_callback=None):
-
-        if StateMapService.service != "StateMap":
+    def subscribe_to_statemap(self, state_map_service: EngineServices.ServiceHandle, subscription_list: dict,
+                              data_available_callback: Callable[[list[StageLinQStateMapData]], None] = None) -> None:
+        """
+This function is used to subscribe to a statemap service provided by a StageLinQ device.
+        :param state_map_service: This parameter is used to determine if
+        :param subscription_list: list of serivces that the application wants to subscribe to
+        :param data_available_callback: Callback for when data is available from StageLinQ device
+        """
+        if state_map_service.service != "StateMap":
             raise Exception("Service is not StateMap!")
 
         # Defer task creation to avoid blocking the calling function
-        asyncio.create_task(self._subscribe_to_statemap(StateMapService, subscription_list, data_available_callback))
+        asyncio.create_task(self._subscribe_to_statemap(state_map_service, subscription_list, data_available_callback))
 
     async def _subscribe_to_statemap(self, StateMapService, subscription_list, data_available_callback):
 
@@ -147,24 +166,16 @@ class PyStageLinQ:
 
         self.tasks.add(state_map.get_task())
 
-    def SearchForService(self, service_list, wanted_service):
-        for service in service_list:
-            if service.service == wanted_service:
-                return service
-        return None
+    async def _start_StageLinQ(self):
 
-    async def start_StageLinQ(self):
+        self.tasks.add(asyncio.create_task(self._periodic_announcement()))
+        self.tasks.add(asyncio.create_task(self._PyStageLinQStrapper()))
 
-        self.tasks.add(asyncio.create_task(self.periodic_announcement()))
-        self.tasks.add(asyncio.create_task(self.PyStageLinQStrapper()))
-
-
-        await self.wait_for_exit()
+        await self._wait_for_exit()
 
         pass
 
-
-    async def wait_for_exit(self):
+    async def _wait_for_exit(self):
         while True:
             for task in self.tasks.copy():
                 if task.done():
@@ -173,15 +184,15 @@ class PyStageLinQ:
                     return
             await asyncio.sleep(1)
 
-    async def periodic_announcement(self):
+    async def _periodic_announcement(self):
         while True:
-            self.announce_self()
+            self._announce_self()
             await asyncio.sleep(0.5)
 
-    async def PyStageLinQStrapper(self):
+    async def _PyStageLinQStrapper(self):
         await asyncio.sleep(0.5)
 
-        await self.discover_StageLinQ_device(timeout=2)
+        await self._discover_StageLinQ_device(timeout=2)
 
     def __del__(self):
-        self.stop()
+        self._stop()
