@@ -1,7 +1,7 @@
 # Overview
 This Python module decodes part of the StageLinQ protocol used by Denon DJ equipment. In its current state it is
 possible to read out information like track information, fader position (Crossfader, channel volume, pitchfader), BPM 
-etc. The project also includes [a description of how StageLinQ works](./StageLinQ_protocol.md) taking from my findings
+etc. The project also includes [a description of how StageLinQ works](https://github.com/Jaxc/PyStageLinQ/blob/main/StageLinQ_protocol.md) taking from my findings
 as well as other code available.
 
 This module can be used to receive this information from a device via a callback when data is available.
@@ -63,14 +63,14 @@ if __name__ == "__main__":
 # Wireshark dissector
 When I developed this code I made a WireShark Dissector, it is included in this repo. Do note that this dissector 
 isn't properly tested and may cause unexpected issues. As this file is not part of the Pythoncode in PyStageLinQ it can
-be found on [GitHub](tools/StageLinQ.lua)
+be found on [GitHub](https://github.com/Jaxc/PyStageLinQ/blob/main/tools/StageLinQ.lua)
 
-# Knows issues
-There are currently one known issue:
+# Compatability
+PyStageLinQ has been tested with a Denon DJ Prime Go on Windows 10 and Linux (Mint 20.3) with Python 3.10. 
 
-## PyStageLinq cannot connect to device
-For some reason that I cannot figure out PyStageLinQ cannot connect to my Prime Go sometimes. This seems to be
-completely random and is because the device does not send a table of services when requested
+# Acknowledgements
+Big thanks to icedream for his implementation of StageLinQ in go:
+https://github.com/icedream/go-stagelinq
 
 # Change log
 Here follows a log of released versions of PyStageLinQ.
@@ -85,12 +85,8 @@ Yes
 Some things
 ### Security
 No
-
-
-
-# Compatability
-PyStageLinQ has been tested with a Denon DJ Prime Go on Windows 10 and Linux (Mint 20.3) with Python 3.10. 
-
-# Acknowledgements
-Big thanks to icedream for his implementation of StageLinQ in go:
-https://github.com/icedream/go-stagelinq
+### Knows issues
+There are currently one known issue:
+#### PyStageLinq cannot connect to device
+For some reason that I cannot figure out PyStageLinQ cannot connect to my Prime Go sometimes. This seems to be
+completely random and is because the device does not send a table of services when requested
