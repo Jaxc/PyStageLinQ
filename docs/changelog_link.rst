@@ -1,4 +1,5 @@
 Version info
 ************
 
-.. mdinclude:: ../changelog.md
+.. include:: ../changelog.md
+   :parser: myst_parser.sphinx_
