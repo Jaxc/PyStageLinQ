@@ -55,7 +55,7 @@ def state_map_data_print(data):
 
 # Example main function, starting PyStageLinQ.
 if __name__ == "__main__":
-        global PrimeGo
+    global PrimeGo
     PrimeGo = PyStageLinQ.PyStageLinQ(new_device_found_callback, name="Jaxcie StagelinQ")
     PrimeGo.start()
 ```
