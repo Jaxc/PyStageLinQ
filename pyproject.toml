@@ -2,15 +2,6 @@
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[project.urls]
-"Homepage" = "https://github.com/Jaxc/PyStageLinQ"
-"Bug Tracker" = "https://github.com/Jaxc/PyStageLinQ/issues"
-"Documentation" = "https://pystagelinq.readthedocs.io/en/latest/"
-"Funding" = "https://ko-fi.com/jaxcie"
-
-[project.optional-dependencies]
-    docs = ["sphinx", "myst-parser"]
-
 [project]
 name = "PyStageLinQ"
 authors = [
@@ -27,3 +18,14 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 keywords = ["StageLinQ", "DJ", "VJ", "Denon DJ", "Prime Go", "Streaming"]
+
+[project.urls]
+"Homepage" = "https://github.com/Jaxc/PyStageLinQ"
+"Bug Tracker" = "https://github.com/Jaxc/PyStageLinQ/issues"
+"Documentation" = "https://pystagelinq.readthedocs.io/en/latest/"
+"Funding" = "https://ko-fi.com/jaxcie"
+
+[project.optional-dependencies]
+    docs = ["sphinx", "myst-parser"]
+
+
