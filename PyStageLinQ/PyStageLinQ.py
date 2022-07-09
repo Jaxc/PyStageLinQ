@@ -19,6 +19,8 @@ class PyStageLinQ:
     REQUESTSERVICEPORT = 0  # If set to anything but 0 other StageLinQ devices will try to request services at said port
     StageLinQ_discovery_port = 51337
 
+    ANNOUNCE_IP ="169.254.255.255"
+
     def __init__(self, new_device_found_callback, name="Hello StageLinQ World", ):
         self.name = name
         self.OwnToken = StageLinQToken()
@@ -52,15 +54,20 @@ class PyStageLinQ:
                                                                   SwVersion="1.0.0",
                                                                   ReqServicePort=self.REQUESTSERVICEPORT))
 
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as leave_socket:
-            leave_socket.sendto(discovery_frame, ("169.254.255.255", 51337))
+        self.send_discovery_frame(discovery_frame)
 
     def announce_self(self):
         Discovery = StageLinQDiscovery()
         discovery_frame = Discovery.encode(self.discovery_info)
+        self.send_discovery_frame(discovery_frame)
 
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as announce_socket:
-            announce_socket.sendto(discovery_frame, ("169.254.255.255", 51337))
+    def send_discovery_frame(self, discovery_frame):
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as discovery_socket:
+            try:
+                discovery_socket.sendto(discovery_frame, (self.ANNOUNCE_IP, 51337))
+            except PermissionError:
+                raise Exception(
+                    f"Cannot write to IP {self.ANNOUNCE_IP}, this error could be due to that there is no network cart set up with this IP range")
 
     async def discover_StageLinQ_device(self, timeout=10):
         """
