@@ -8,6 +8,9 @@ build-backend = "hatchling.build"
 "Documentation" = "https://pystagelinq.readthedocs.io/en/latest/"
 "Funding" = "https://ko-fi.com/jaxcie"
 
+[project.optional-dependencies]
+    docs = ["sphinx", "myst-parser"]
+
 [project]
 name = "PyStageLinQ"
 authors = [
