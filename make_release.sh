@@ -1,17 +1,20 @@
 #!/bin/bash
 
-echo "Starting releasebuild!"
+echo "Starting releasebuild! Last release in main branch was:"
+cat current_version.txt
+echo ""
+echo "Which version shall next release be?"
+read new_ver
 
-new_ver=$(git tag --points-at HEAD)
+echo $new_ver > current_version.txt
+echo "version = \""$new_ver"\"" >> pyproject.toml
 
-echo "Version detected from git tag: $new_ver"
-
-echo "Updating pyproject.toml"
-sed -i 's/version = "0.0.0"/version = "'$new_ver'"/' pyproject.toml
-
-
-rm dist/* -f
+rm dist/*
 
 python3 -m build
 
-twine upload dist/* -u __token__ -p $1
+echo "Please enter token for upload to PyPi"
+read -s PyPi_token
+echo
+
+twine upload dist/* -u __token__ -p $PyPi_token
