@@ -72,7 +72,7 @@ workflows:
 
   release:
     jobs:
-      - release
+      - test:
         filters:
           branches:
             only:
