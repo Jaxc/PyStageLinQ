@@ -38,10 +38,10 @@ jobs:
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
-          command: echo ${#str}
+          command: echo ${#PyPiToken}
           command2: echo "#PyPiToken"
 
-  test: # This is the name of the job, feel free to change it to better match what you're trying to do!
+  release_job: # This is the name of the job, feel free to change it to better match what you're trying to do!
     # These next lines defines a Docker executors: https://circleci.com/docs/2.0/executor-types/
     # You can specify an image from Dockerhub or use one of the convenience images from CircleCI's Developer Hub
     # A list of available CircleCI Docker convenience images are available here: https://circleci.com/developer/images/image/cimg/python
@@ -74,7 +74,10 @@ workflows:
     # Inside the workflow, you define the jobs you want to run.
     jobs:
       - build
-      - test:
+
+  release:
+    jobs:
+      - release_job:
         filters:
           tags:
             only:
