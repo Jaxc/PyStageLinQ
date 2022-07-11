@@ -7,7 +7,6 @@ echo "Which version shall next release be?"
 read new_ver
 
 echo $new_ver > current_version.txt
-echo "version = \""$new_ver"\"" >> pyproject.toml
 
 rm dist/*
 
