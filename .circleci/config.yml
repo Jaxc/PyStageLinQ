@@ -78,9 +78,11 @@ workflows:
   release:
     jobs:
       - release_job:
-        filters:
-          tags:
-            only:
-              /^[0-9]+(\.[0-9]+)*$/
-          branches:
-            ignore: /.*/
+          filters:
+            tags:
+              only:
+                /^[0-9]+(\.[0-9]+)*$/
+            branches:
+              ignore: /.*/
+          context:
+            PyPi
