@@ -38,7 +38,8 @@ jobs:
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
-          command: echo "hello build"
+          - command: echo "$PyPiToken"
+          - command: echo "#PyPiToken"
 
   test: # This is the name of the job, feel free to change it to better match what you're trying to do!
     # These next lines defines a Docker executors: https://circleci.com/docs/2.0/executor-types/
