@@ -19,7 +19,7 @@ classifiers = [
 ]
 keywords = ["StageLinQ", "DJ", "VJ", "Denon DJ", "Prime Go", "Streaming"]
 
-version = "0.1.2"
+version = "0.0.0"
 
 [project.urls]
 "Homepage" = "https://github.com/Jaxc/PyStageLinQ"
