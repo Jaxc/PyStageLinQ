@@ -38,7 +38,7 @@ jobs:
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
-          command: echo "$PyPiToken"
+          command: echo "#PyPiToken"
           command2: echo "#PyPiToken"
 
   test: # This is the name of the job, feel free to change it to better match what you're trying to do!
