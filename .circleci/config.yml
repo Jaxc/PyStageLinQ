@@ -33,7 +33,7 @@ jobs:
           pip-dependency-file: build_requirements.txt
       - run:
           name: build and publish release
-          command: bash make_release.sh
+          command: bash make_release.sh ${PyPiToken}
       - store_artifacts:
           path: dist/
 
