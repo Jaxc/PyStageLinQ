@@ -13,6 +13,7 @@ jobs:
       - checkout
       - python/install-packages:
           pkg-manager: pip
+          pip-dependency-file: build-requirements.txt
       - run:
           name: Run tests
           command: python3 -m build
@@ -29,6 +30,7 @@ jobs:
       - checkout
       - python/install-packages:
           pkg-manager: pip
+          pip-dependency-file: build-requirements.txt
       - run:
           name: build and publish release
           command: bash make_release.sh
