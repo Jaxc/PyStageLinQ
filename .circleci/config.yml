@@ -31,7 +31,7 @@ jobs:
           pkg-manager: pip
       - run:
           name: build and publish release
-          command: bash make_release.s
+          command: bash make_release.sh
       - store_artifacts:
           path: dist/
 
