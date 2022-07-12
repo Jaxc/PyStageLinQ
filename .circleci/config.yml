@@ -13,7 +13,7 @@ jobs:
       - checkout
       - python/install-packages:
           pkg-manager: pip
-          pip-dependency-file: build-requirements.txt
+          pip-dependency-file: build_requirements.txt
       - run:
           name: Run tests
           command: python3 -m build
