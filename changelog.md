@@ -1,6 +1,15 @@
 # Changelog
 Here follows a log of released versions of PyStageLinQ.
 
+## [0.1.2] - Documentation update again
+A lot of small fixes and additions now makes the readthedocs.org link to actually work.
+### Fixed
+readthedocs documentation actually builds and is available.
+### Added
+Support for CircleCI for future builds and testing. Release script has been updated to be done automatically
+in CI chain when a tag is created. In theory only this document needs to be updated for each release and a
+tag added to git and all release work is done.
+
 ## [0.1.1] - Documentation update
 Added documentation
 ### Added
@@ -14,7 +23,7 @@ as private.
 ### Known Issues
 Same known issues as for version 0.1.0.
 
-## [0.1.0] - Inital release
+## [0.1.0] - Initial release
 Basic functionality done, but documentation needs to be done. I expect the API to change when I write this, so this is
 a pre-release until Documentation is in place.
 ### Added
