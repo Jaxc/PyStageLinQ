@@ -14,7 +14,21 @@ class StageLinQToken:
         self.token = 0
 
     def generate_token(self):
-        self.token = int.from_bytes(randbytes(self.TOKENLENGTH), byteorder='big')
+        """
+        A function to generate the token.
+
+        NOTE:
+        The tokens MSB cannot have the 0x80 bit set, this will cause the device to not send services
+
+        :return: No return value
+        """
+        randomized_bytes = bytearray(randbytes(self.TOKENLENGTH))
+
+        # check if first bit is set and set bit to 0 if so.
+        if randomized_bytes[0] >= 128:
+            randomized_bytes[0] = randomized_bytes[0] - 128
+
+        self.token = int.from_bytes(randomized_bytes, byteorder='big')
 
     def get_token(self):
         return self.token
