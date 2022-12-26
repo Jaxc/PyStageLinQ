@@ -15,10 +15,29 @@ jobs:
           pkg-manager: pip
           pip-dependency-file: build_requirements.txt
       - run:
-          name: Run tests
+          name: Build library
           command: python3 -m build
       - store_artifacts:
           path: dist/
+
+  test:
+    docker:
+      - image: cimg/python:3.10.2
+
+      resource_class: small
+      steps:
+        - checkout
+        - python/install-packages:
+            pkg-manager: pip
+            pip-dependency-file: test_requirements.txt
+
+        - run:
+            name: run unittests
+            command: pytest --cov-report html --cov=.
+
+        - store_artifacts:
+            path: htmlcov/
+
 
   build-and-publish:
     docker:
@@ -40,7 +59,14 @@ jobs:
 workflows:
   commit:
     jobs:
+      - test:
+          filters:
+            tags:
+              ignore:
+                /^[0-9]+(\.[0-9]+)*$/
       - build:
+          requires:
+            test
           filters:
             tags:
               ignore:

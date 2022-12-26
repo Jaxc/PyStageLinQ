@@ -22,13 +22,18 @@ class StageLinQToken:
 
         :return: No return value
         """
-        randomized_bytes = bytearray(randbytes(self.TOKENLENGTH))
+        randomized_bytes = self._get_randomized_bytes(self.TOKENLENGTH)
 
         # check if first bit is set and set bit to 0 if so.
         if randomized_bytes[0] >= 128:
             randomized_bytes[0] = randomized_bytes[0] - 128
 
         self.token = int.from_bytes(randomized_bytes, byteorder='big')
+
+    @staticmethod
+    def _get_randomized_bytes(length):
+        randomized_bytes = bytearray(randbytes(length))
+        return randomized_bytes
 
     def get_token(self):
         return self.token
@@ -37,17 +42,23 @@ class StageLinQToken:
         if type(token) == int:
             if self.validate_token(token) == PyStageLinQError.STAGELINQOK:
                 self.token = token
-            else:
-                raise Exception("Token could not be Validated")
+                ret = PyStageLinQError.STAGELINQOK
+            else :
+                # Token could not be Validated
+                ret = PyStageLinQError.INVALIDTOKEN
         else:
-            raise Exception("Token is not of type int")
+            # Token is not of type int
+            ret = PyStageLinQError.INVALIDTOKENTYPE
+
+        return ret
 
     def validate_token(self, token) -> int:
         ret = PyStageLinQError.INVALIDTOKEN
         # The token is validated by converting it to a 16 byte array and then back to an int. If the value is the same
         # the token is considered valid
-        token_bytes = token.to_bytes(StageLinQToken.TOKENLENGTH, byteorder='big')
-        if token == int.from_bytes(token_bytes, byteorder='big'):
-            ret = PyStageLinQError.STAGELINQOK
+        if token.bit_length() <= StageLinQToken.TOKENLENGTH * 8:
+            token_bytes = token.to_bytes(StageLinQToken.TOKENLENGTH, byteorder='big')
+            if token == int.from_bytes(token_bytes, byteorder='big'):
+                ret = PyStageLinQError.STAGELINQOK
 
         return ret

@@ -93,6 +93,10 @@ class StageLinQService:
                 raise Exception(f"Remote socket for IP:{self.Ip} Port:{self.Port} closed!")
 
             frames = self.DecodeMultiframe(response)
+            if frames is None:
+                #something went wrong during decoding, lets throw away the frame and hope it doesn't happen again
+                print(f"Error while decoding the frame")
+                continue
 
             adding_services = False
             for frame in frames:
@@ -140,7 +144,9 @@ class StageLinQService:
                 case _:
                     # invalid data, return
                     return
-            data.decode(frame)
+            if data.decodeFrame(frame) != PyStageLinQError.STAGELINQOK:
+                return None
+
             subframes.append(data.get())
             frame = frame[data.get_len():]
 

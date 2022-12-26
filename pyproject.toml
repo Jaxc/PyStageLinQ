@@ -30,4 +30,10 @@ version = "0.0.0"
 [project.optional-dependencies]
     docs = ["sphinx", "myst-parser"]
 
-
+[tool.pytest.ini_options]
+testpaths = [
+    "tests/unit/*",
+]
+pythonpath = [
+  "."
+]
