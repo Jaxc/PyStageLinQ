@@ -33,7 +33,7 @@ jobs:
 
       - run:
           name: run unittests
-          command: pytest --cov-report html --cov=.
+          command: pytest --cov-report html --cov=PyStageLinQ
 
       - store_artifacts:
           path: htmlcov/
