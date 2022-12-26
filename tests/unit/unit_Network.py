@@ -15,6 +15,7 @@ ip_dummy = ".".join(map(str, (random.randint(0, 255)
 def somecallback():
     pass
 
+
 @pytest.fixture()
 def StageLinQService():
     """discovery_frame = "airD"

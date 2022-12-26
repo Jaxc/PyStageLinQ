@@ -6,10 +6,11 @@ This code is licensed under MIT license (see LICENSE for details)
 from .Token import *
 from dataclasses import dataclass
 
+
 class StageLinQMessageIDs:
-    StageLinQServiceAnnouncementData =  (0).to_bytes(4,byteorder='big')
-    StageLinQReferenceData =            (1).to_bytes(4,byteorder='big')
-    StageLinQServiceRequestData =       (2).to_bytes(4,byteorder='big')
+    StageLinQServiceAnnouncementData = (0).to_bytes(4, byteorder='big')
+    StageLinQReferenceData           = (1).to_bytes(4, byteorder='big')
+    StageLinQServiceRequestData      = (2).to_bytes(4, byteorder='big')
 
 
 @dataclass

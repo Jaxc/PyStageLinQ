@@ -10,13 +10,14 @@ Processes needed for StageLinQ:
 2. Negotiation: Reading Device discovery messages and request services.
 3. Service Server: Open TCP socket ? 
 """
-PrimeGo = None
+PrimeGo: PyStageLinQ
 
 
 def new_device_found_callback(ip, discovery_frame, service_list):
     # Print device info and supplied services
     print(
-        f"Found new Device on ip {ip}: Device name: {discovery_frame.device_name}, ConnectionType: {discovery_frame.connection_type}, SwName: {discovery_frame.sw_name}, "
+        f"Found new Device on ip {ip}: Device name: {discovery_frame.device_name}, "
+        f"ConnectionType: {discovery_frame.connection_type}, SwName: {discovery_frame.sw_name}, "
         f"SwVersion: {discovery_frame.sw_version}, port: {discovery_frame.Port}")
 
     if len(service_list) > 0:
@@ -25,13 +26,13 @@ def new_device_found_callback(ip, discovery_frame, service_list):
         print("No services found")
 
     for service in service_list:
-         print(f"\t{service.service} on port {service.port}")
-
+        print(f"\t{service.service} on port {service.port}")
 
     # Request StateMap service
     for service in service_list:
         if service.service == "StateMap":
             PrimeGo.subscribe_to_statemap(service, EngineServices.prime_go, state_map_data_print)
+
 
 def state_map_data_print(data):
     for message in data:
@@ -40,7 +41,7 @@ def state_map_data_print(data):
 
 def main():
     global PrimeGo
-    PrimeGo = PyStageLinQ.PyStageLinQ(new_device_found_callback, name="Jaxcie StagelinQ")
+    PrimeGo = PyStageLinQ.PyStageLinQ(new_device_found_callback, name="Jaxcie StageLinQ")
     PrimeGo.start_standalone()
 
 

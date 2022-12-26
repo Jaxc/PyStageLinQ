@@ -11,6 +11,7 @@ from . import Token
 
 class StageLinQService:
     def __init__(self, ip, discovery_frame, own_token, service_found_callback):
+        self.Socket = None
         self.reference_task = None
         self.reader = None
         self.writer = None
@@ -59,7 +60,7 @@ class StageLinQService:
         await asyncio.sleep(delay)
 
         out_data = StageLinQRequestServices()
-        service_request_message = out_data.encodeFrame(StageLinQServiceRequestService(Token=self.OwnToken))
+        service_request_message = out_data.encode_frame(StageLinQServiceRequestService(Token=self.OwnToken))
 
         self.writer.write(service_request_message)
         await self.writer.drain()
@@ -92,7 +93,7 @@ class StageLinQService:
                 # Socket closed
                 raise Exception(f"Remote socket for IP:{self.Ip} Port:{self.Port} closed!")
 
-            frames = self.DecodeMultiframe(response)
+            frames = self.decode_multiframe(response)
             if frames is None:
                 # Something went wrong during decoding, lets throw away the frame and hope it doesn't happen again
                 print(f"Error while decoding the frame")
@@ -126,14 +127,15 @@ class StageLinQService:
     async def send_reference_message(self):
         reference_data = StageLinQReferenceData(OwnToken=self.OwnToken, DeviceToken=self.DeviceToken, Reference=0)
         reference_message = StageLinQReference()
-        reference_message.encodeFrame(reference_data)
+        reference_message.encode_frame(reference_data)
 
-        self.writer.write(reference_message.encodeFrame(reference_data))
+        self.writer.write(reference_message.encode_frame(reference_data))
         await self.writer.drain()
 
-    def DecodeMultiframe(self, frame):
+    @staticmethod
+    def decode_multiframe(frame):
         subframes = []
-        while (len(frame) > 4):
+        while len(frame) > 4:
             match (int.from_bytes(frame[0:4], byteorder='big')):
                 case 0:
                     data = StageLinQServiceAnnouncement()
@@ -144,7 +146,7 @@ class StageLinQService:
                 case _:
                     # invalid data, return
                     return
-            if data.decodeFrame(frame) != PyStageLinQError.STAGELINQOK:
+            if data.decode_frame(frame) != PyStageLinQError.STAGELINQOK:
                 return None
 
             subframes.append(data.get())
@@ -158,6 +160,6 @@ class StageLinQService:
             print("Closing Network sockets for services")
             self.Socket.close()
         except AttributeError:
-            print("Failed to close network, possible it was not initalized")
+            print("Failed to close network, possible it was not initialized")
             # Socket not inited, nothing to close
             pass

@@ -2,81 +2,87 @@ import pytest
 import PyStageLinQ.Token
 
 from PyStageLinQ.ErrorCodes import PyStageLinQError
-from pytest import MonkeyPatch
+
 
 @pytest.fixture()
-def Token():
+def token():
     return PyStageLinQ.Token.StageLinQToken()
 
 
+def test_init_value(token):
+    assert token.get_token() == 0
 
-def test_init_value(Token):
-    assert Token.get_token() == 0
 
-def test__get_randomized_bytes_length(Token):
+def test__get_randomized_bytes_length(token):
     test_lengths = [16, 8, 1, 100, 3, 24, 4]
 
     for length in test_lengths:
-        rand_bytes = Token._get_randomized_bytes(length)
+        rand_bytes = token._get_randomized_bytes(length)
         assert len(rand_bytes) == length
 
-def test_generate_token_zero(Token, monkeypatch):
+
+def test_generate_token_zero(token, monkeypatch):
 
     def mock_random_0(length):
-        return bytearray((0).to_bytes(length,'big'))
+        return bytearray((0).to_bytes(length, 'big'))
 
-    monkeypatch.setattr(Token, "_get_randomized_bytes", mock_random_0)
+    monkeypatch.setattr(token, "_get_randomized_bytes", mock_random_0)
 
-    Token.generate_token()
-    assert Token.get_token() == 0
+    token.generate_token()
+    assert token.get_token() == 0
 
-def test_generate_token_MSb1(Token, monkeypatch):
 
-    def mock_random_MSb1(length):
-        return bytearray(int("80000000000000000000000000000001", length).to_bytes(length,'big'))
+def test_generate_token_msb1(token, monkeypatch):
 
-    monkeypatch.setattr(Token, "_get_randomized_bytes", mock_random_MSb1)
+    def mock_random_msb1(length):
+        return bytearray(int("80000000000000000000000000000001", length).to_bytes(length, 'big'))
 
-    Token.generate_token()
-    assert Token.get_token() == 1
+    monkeypatch.setattr(token, "_get_randomized_bytes", mock_random_msb1)
 
-def test_validate_token_ok(Token):
+    token.generate_token()
+    assert token.get_token() == 1
 
-    Token.generate_token()
-    goodValue = Token.get_token()
 
-    goodResult = Token.validate_token(goodValue)
+def test_validate_token_ok(token):
+
+    token.generate_token()
+    good_value = token.get_token()
+
+    goodResult = token.validate_token(good_value)
 
     assert goodResult == PyStageLinQError.STAGELINQOK
 
-def test_validate_token_invalid(Token):
+
+def test_validate_token_invalid(token):
 
     badValue = int("800000000000000000000000000000000", 17)
-    badResult = Token.validate_token(badValue)
+    badResult = token.validate_token(badValue)
 
     assert badResult == PyStageLinQError.INVALIDTOKEN
 
-def test_set_token_wrong_input_type(Token):
+
+def test_set_token_wrong_input_type(token):
     # test type
     testValue = None
-    assert Token.set_token((testValue)) == PyStageLinQError.INVALIDTOKENTYPE
+    assert token.set_token(testValue) == PyStageLinQError.INVALIDTOKENTYPE
 
-def test_set_token_valid_input(Token, monkeypatch):
 
-    def ret_ok(token):
+def test_set_token_valid_input(token, monkeypatch):
+
+    def ret_ok(_):
         return PyStageLinQError.STAGELINQOK
 
-    monkeypatch.setattr(Token, "validate_token", ret_ok)
+    monkeypatch.setattr(token, "validate_token", ret_ok)
     testValue = 0
-    assert Token.set_token((testValue)) == PyStageLinQError.STAGELINQOK
-    assert Token.get_token() == testValue
+    assert token.set_token(testValue) == PyStageLinQError.STAGELINQOK
+    assert token.get_token() == testValue
 
-def test_set_token_invalid_input_value(Token, monkeypatch):
 
-    def ret_nok(token):
+def test_set_token_invalid_input_value(token, monkeypatch):
+
+    def ret_nok(_):
         return PyStageLinQError.INVALIDTOKEN
 
     testValue = 0
-    monkeypatch.setattr(Token, "validate_token", ret_nok)
-    assert Token.set_token((testValue)) == PyStageLinQError.INVALIDTOKEN
-
+    monkeypatch.setattr(token, "validate_token", ret_nok)
+    assert token.set_token(testValue) == PyStageLinQError.INVALIDTOKEN

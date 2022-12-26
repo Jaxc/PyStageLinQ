@@ -10,7 +10,7 @@ stream.
 ### Disclaimer
 This information has been gathered from a Denon DJ Prime Go using Wireshark.
 The information may differ for other equipment that outputs StageLinQ. 
-This also means that this text will float between what I have discovered and I have derived as requirements of the 
+This also means that this text will float between what I have discovered and derived as requirements of the 
 protocol.
 
 ### Random info I don't really know where to put
@@ -21,7 +21,7 @@ will be 0x00 when text is written. For python encoding "UTF-16be" seems to work
 ### Nomenclature
 In this document the following words are used as this:
 
-*StageLinQ device*: A device that can communicate on StageLinq, e.g. DJ equipment, stage lightning controller, or a
+*StageLinQ device*: A device that can communicate on StageLinq, e.g. DJ equipment, stage lightning controller, or 
 a computer running the software.
 
 *StageLinQ source*: This is used to describe a device that is the source of StageLinQ information,

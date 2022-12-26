@@ -5,101 +5,100 @@ import PyStageLinQ.DataClasses
 import random
 
 from PyStageLinQ.ErrorCodes import PyStageLinQError
-from pytest import MonkeyPatch
-
 
 device_name_dummy = "AAAA"
 connection_type_dummy = "BBBB"
 sw_name_dummy = "CCCC"
 sw_version_dummy = "DDDD"
 
-@pytest.fixture()
-def dummyPort():
-    return random.randint(1, 65535)
 
 @pytest.fixture()
-def dummyToken():
+def dummy_port():
+    return random.randint(1, 65535)
+
+
+@pytest.fixture()
+def dummy_token():
     return PyStageLinQ.Token.StageLinQToken()
 
 
 @pytest.fixture()
-def StageLinQDiscovery():
+def stagelinq_discovery():
     return PyStageLinQ.MessageClasses.StageLinQDiscovery()
 
 
-def test_init_values(StageLinQDiscovery):
-    assert StageLinQDiscovery.Port is None
-    assert StageLinQDiscovery.sw_version is None
-    assert StageLinQDiscovery.sw_name is None
-    assert StageLinQDiscovery.device_name is None
-    assert StageLinQDiscovery.connection_type is None
-    assert type(StageLinQDiscovery.token) is PyStageLinQ.Token.StageLinQToken
-    assert StageLinQDiscovery.token.get_token() == 0
-    assert StageLinQDiscovery.length == 0
-    assert StageLinQDiscovery.port_length == 2
-    assert StageLinQDiscovery.magic_flag_start == 0
-    assert StageLinQDiscovery.magic_flag_length == 4
-    assert StageLinQDiscovery.magic_flag_stop == 4
-    assert StageLinQDiscovery.network_len_size == 4
-    assert StageLinQDiscovery.reference_len == 8
+def test_init_values(stagelinq_discovery):
+    assert stagelinq_discovery.Port is None
+    assert stagelinq_discovery.sw_version is None
+    assert stagelinq_discovery.sw_name is None
+    assert stagelinq_discovery.device_name is None
+    assert stagelinq_discovery.connection_type is None
+    assert type(stagelinq_discovery.token) is PyStageLinQ.Token.StageLinQToken
+    assert stagelinq_discovery.token.get_token() == 0
+    assert stagelinq_discovery.length == 0
+    assert stagelinq_discovery.port_length == 2
+    assert stagelinq_discovery.magic_flag_start == 0
+    assert stagelinq_discovery.magic_flag_length == 4
+    assert stagelinq_discovery.magic_flag_stop == 4
+    assert stagelinq_discovery.network_len_size == 4
+    assert stagelinq_discovery.reference_len == 8
 
 
-def test_encodeFrame_invalid_port(StageLinQDiscovery, dummyToken, monkeypatch):
-
-    def verify_discovery_data_mock(string):
+def test_encode_frame_invalid_port(stagelinq_discovery, dummy_token, monkeypatch):
+    def verify_discovery_data_mock(_):
         return PyStageLinQError.INVALIDDISCOVERYDATA
 
-    testData = PyStageLinQ.DataClasses.StageLinQDiscoveryData(dummyToken, "", "", "", "",
-                                                              -1)
-    monkeypatch.setattr(StageLinQDiscovery, 'verify_discovery_data', verify_discovery_data_mock)
-    assert StageLinQDiscovery.encodeFrame(testData) == PyStageLinQError.INVALIDDISCOVERYDATA
+    test_data = PyStageLinQ.DataClasses.StageLinQDiscoveryData(dummy_token, "", "", "", "",
+                                                               -1)
+    monkeypatch.setattr(stagelinq_discovery, 'verify_discovery_data', verify_discovery_data_mock)
+    assert stagelinq_discovery.encode_frame(test_data) == PyStageLinQError.INVALIDDISCOVERYDATA
 
 
-def test_encodeFrame_valid_input(StageLinQDiscovery, dummyToken, dummyPort, monkeypatch):
-    def WriteNetworkString_mock(string):
+def test_encode_frame_valid_input(stagelinq_discovery, dummy_token, dummy_port, monkeypatch):
+    def write_network_string_mock(string):
         return string.encode()
 
-    def verify_discovery_data_mock(string):
+    def verify_discovery_data_mock(_):
         return PyStageLinQError.STAGELINQOK
 
-    monkeypatch.setattr(StageLinQDiscovery, 'WriteNetworkString', WriteNetworkString_mock)
-    monkeypatch.setattr(StageLinQDiscovery, 'verify_discovery_data', verify_discovery_data_mock)
-    testData = PyStageLinQ.DataClasses.StageLinQDiscoveryData(dummyToken, device_name_dummy, connection_type_dummy, sw_name_dummy, sw_version_dummy,
-                                                              dummyPort)
-    test_output = StageLinQDiscovery.encodeFrame(testData)
+    monkeypatch.setattr(stagelinq_discovery, 'write_network_string', write_network_string_mock)
+    monkeypatch.setattr(stagelinq_discovery, 'verify_discovery_data', verify_discovery_data_mock)
+    test_data = PyStageLinQ.DataClasses.StageLinQDiscoveryData(dummy_token, device_name_dummy, connection_type_dummy,
+                                                               sw_name_dummy, sw_version_dummy,
+                                                               dummy_port)
+    test_output = stagelinq_discovery.encode_frame(test_data)
 
     assert "airD".encode() == test_output[0:4]
-    assert dummyToken.get_token().to_bytes(16,byteorder='big') == test_output[4:20]
+    assert dummy_token.get_token().to_bytes(16, byteorder='big') == test_output[4:20]
     assert device_name_dummy.encode() == test_output[20:24]
     assert connection_type_dummy.encode() == test_output[24:28]
     assert sw_name_dummy.encode() == test_output[28:32]
     assert sw_version_dummy.encode() == test_output[32:36]
-    assert dummyPort.to_bytes(2,byteorder='big') == test_output[36:38]
-
-def test_verify_discovery_data_wrong_port(StageLinQDiscovery):
-    testData = PyStageLinQ.DataClasses.StageLinQDiscoveryData(dummyToken, "", "", "", "",
-                                                              -1)
-
-    assert StageLinQDiscovery.verify_discovery_data(testData) == PyStageLinQError.INVALIDDISCOVERYDATA
+    assert dummy_port.to_bytes(2, byteorder='big') == test_output[36:38]
 
 
-def test_verify_discovery_data_ok(StageLinQDiscovery, dummyPort):
-    testData = PyStageLinQ.DataClasses.StageLinQDiscoveryData(dummyToken, "", "", "", "",
-                                                              dummyPort)
+def test_verify_discovery_data_wrong_port(stagelinq_discovery, dummy_token):
+    test_data = PyStageLinQ.DataClasses.StageLinQDiscoveryData(dummy_token, "", "", "", "",
+                                                               -1)
 
-    assert StageLinQDiscovery.verify_discovery_data(testData) == PyStageLinQError.STAGELINQOK
-
-
-def test_verify_get_data(StageLinQDiscovery, dummyPort):
-
-    StageLinQDiscovery.device_name = device_name_dummy
-    StageLinQDiscovery.connection_type = connection_type_dummy
-    StageLinQDiscovery.sw_name = sw_name_dummy
-    StageLinQDiscovery.sw_version = sw_version_dummy
-    StageLinQDiscovery.Port = dummyPort
+    assert stagelinq_discovery.verify_discovery_data(test_data) == PyStageLinQError.INVALIDDISCOVERYDATA
 
 
-    data = StageLinQDiscovery.get()
+def test_verify_discovery_data_ok(stagelinq_discovery, dummy_token, dummy_port):
+    test_data = PyStageLinQ.DataClasses.StageLinQDiscoveryData(dummy_token, "", "", "", "",
+                                                               dummy_port)
+
+    assert stagelinq_discovery.verify_discovery_data(test_data) == PyStageLinQError.STAGELINQOK
+
+
+def test_verify_get_data(stagelinq_discovery, dummy_port):
+    stagelinq_discovery.device_name = device_name_dummy
+    stagelinq_discovery.connection_type = connection_type_dummy
+    stagelinq_discovery.sw_name = sw_name_dummy
+    stagelinq_discovery.sw_version = sw_version_dummy
+    stagelinq_discovery.Port = dummy_port
+
+    data = stagelinq_discovery.get()
 
     assert type(data.Token) is PyStageLinQ.Token.StageLinQToken
     assert data.Token.get_token() == 0
@@ -108,55 +107,55 @@ def test_verify_get_data(StageLinQDiscovery, dummyPort):
     assert data.ConnectionType == connection_type_dummy
     assert data.SwName == sw_name_dummy
     assert data.SwVersion == sw_version_dummy
-    assert data.ReqServicePort == dummyPort
+    assert data.ReqServicePort == dummy_port
 
-def test_decodeFrame_invalid_magic_flag_length(StageLinQDiscovery):
 
-    assert StageLinQDiscovery.decodeFrame(random.randbytes(3)) == PyStageLinQError.INVALIDFRAME
+def test_decode_frame_invalid_magic_flag_length(stagelinq_discovery):
+    assert stagelinq_discovery.decode_frame(random.randbytes(3)) == PyStageLinQError.INVALIDFRAME
 
-def test_decodeFrame_invalid_magic_flag(StageLinQDiscovery):
-    assert StageLinQDiscovery.decodeFrame("airJ".encode()) == PyStageLinQError.MAGICFLAGNOTFOUND
 
-def test_decodeFrame_invalid_token_type(StageLinQDiscovery, monkeypatch):
+def test_decode_frame_invalid_magic_flag(stagelinq_discovery):
+    assert stagelinq_discovery.decode_frame("airJ".encode()) == PyStageLinQError.MAGICFLAGNOTFOUND
 
-    def set_token_invalid_type(token):
+
+def test_decode_frame_invalid_token_type(stagelinq_discovery, monkeypatch):
+    def set_token_invalid_type(_):
         return PyStageLinQError.INVALIDTOKENTYPE
 
-    monkeypatch.setattr(StageLinQDiscovery.token, "set_token", set_token_invalid_type)
+    monkeypatch.setattr(stagelinq_discovery.token, "set_token", set_token_invalid_type)
 
-    assert StageLinQDiscovery.decodeFrame("airD".encode()) == PyStageLinQError.INVALIDTOKENTYPE
+    assert stagelinq_discovery.decode_frame("airD".encode()) == PyStageLinQError.INVALIDTOKENTYPE
 
-def test_decodeFrame_invalid_token_length(StageLinQDiscovery, monkeypatch):
 
-    def set_token_invalid(token):
+def test_decode_frame_invalid_token_length(stagelinq_discovery, monkeypatch):
+    def set_token_invalid(_):
         return PyStageLinQError.INVALIDTOKEN
 
-    monkeypatch.setattr(StageLinQDiscovery.token, "set_token", set_token_invalid)
+    monkeypatch.setattr(stagelinq_discovery.token, "set_token", set_token_invalid)
 
-    assert StageLinQDiscovery.decodeFrame("airD".encode()) == PyStageLinQError.INVALIDTOKEN
+    assert stagelinq_discovery.decode_frame("airD".encode()) == PyStageLinQError.INVALIDTOKEN
 
-def test_decodeFrame_valid_input(StageLinQDiscovery, monkeypatch, dummyPort):
 
-    def ReadNetworkString(frame, start_offset):
-        fields = [device_name_dummy, connection_type_dummy, sw_name_dummy, sw_version_dummy, dummyPort]
-        return start_offset + 1, fields[start_offset-20]
+def test_decode_frame_valid_input(stagelinq_discovery, monkeypatch, dummy_port):
+    def read_network_string(_, start_offset):
+        fields = [device_name_dummy, connection_type_dummy, sw_name_dummy, sw_version_dummy, dummy_port]
+        return start_offset + 1, fields[start_offset - 20]
 
-    def set_token_valid(token):
+    def set_token_valid(_):
         return PyStageLinQError.STAGELINQOK
 
-    monkeypatch.setattr(StageLinQDiscovery.token, "set_token", set_token_valid)
-    monkeypatch.setattr(StageLinQDiscovery, "ReadNetworkString", ReadNetworkString)
+    monkeypatch.setattr(stagelinq_discovery.token, "set_token", set_token_valid)
+    monkeypatch.setattr(stagelinq_discovery, "read_network_string", read_network_string)
 
-    dummy_frame = bytearray("airD".encode()) + random.randbytes(20) + dummyPort.to_bytes(2, byteorder='big')
+    dummy_frame = bytearray("airD".encode()) + random.randbytes(20) + dummy_port.to_bytes(2, byteorder='big')
 
-    assert StageLinQDiscovery.decodeFrame(dummy_frame) == PyStageLinQError.STAGELINQOK
+    assert stagelinq_discovery.decode_frame(dummy_frame) == PyStageLinQError.STAGELINQOK
 
-    assert StageLinQDiscovery.Port == dummyPort
-    assert StageLinQDiscovery.sw_version == sw_version_dummy
-    assert StageLinQDiscovery.sw_name == sw_name_dummy
-    assert StageLinQDiscovery.device_name == device_name_dummy
-    assert StageLinQDiscovery.connection_type == connection_type_dummy
-    assert type(StageLinQDiscovery.token) is PyStageLinQ.Token.StageLinQToken
-    assert StageLinQDiscovery.token.get_token() == 0
-    assert StageLinQDiscovery.length == 26
-
+    assert stagelinq_discovery.Port == dummy_port
+    assert stagelinq_discovery.sw_version == sw_version_dummy
+    assert stagelinq_discovery.sw_name == sw_name_dummy
+    assert stagelinq_discovery.device_name == device_name_dummy
+    assert stagelinq_discovery.connection_type == connection_type_dummy
+    assert type(stagelinq_discovery.token) is PyStageLinQ.Token.StageLinQToken
+    assert stagelinq_discovery.token.get_token() == 0
+    assert stagelinq_discovery.length == 26

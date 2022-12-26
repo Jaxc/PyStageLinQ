@@ -3,6 +3,7 @@
 This code is licensed under MIT license (see LICENSE for details)
 """
 
+
 class PyStageLinQError:
     # PyStageLinQ Error codes
     STAGELINQOK = 0
@@ -15,5 +16,3 @@ class PyStageLinQError:
     INVALIDTOKEN = 300
     INVALIDDISCOVERYDATA = 301
     INVALIDTOKENTYPE = 302
-
-

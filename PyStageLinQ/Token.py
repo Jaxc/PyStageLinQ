@@ -6,6 +6,7 @@ This code is licensed under MIT license (see LICENSE for details)
 from random import randbytes
 from .ErrorCodes import PyStageLinQError
 
+
 class StageLinQToken:
     TOKENLENGTH = 16
     token: int
@@ -43,7 +44,7 @@ class StageLinQToken:
             if self.validate_token(token) == PyStageLinQError.STAGELINQOK:
                 self.token = token
                 ret = PyStageLinQError.STAGELINQOK
-            else :
+            else:
                 # Token could not be Validated
                 ret = PyStageLinQError.INVALIDTOKEN
         else:
@@ -52,7 +53,8 @@ class StageLinQToken:
 
         return ret
 
-    def validate_token(self, token) -> int:
+    @staticmethod
+    def validate_token(token) -> int:
         ret = PyStageLinQError.INVALIDTOKEN
         # The token is validated by converting it to a 16 byte array and then back to an int. If the value is the same
         # the token is considered valid
