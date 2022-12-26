@@ -20,23 +20,23 @@ jobs:
       - store_artifacts:
           path: dist/
 
-  test:
+  unittest:
     docker:
       - image: cimg/python:3.10.2
 
-      resource_class: small
-      steps:
-        - checkout
-        - python/install-packages:
-            pkg-manager: pip
-            pip-dependency-file: test_requirements.txt
+    resource_class: small
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+          pip-dependency-file: test_requirements.txt
 
-        - run:
-            name: run unittests
-            command: pytest --cov-report html --cov=.
+      - run:
+          name: run unittests
+          command: pytest --cov-report html --cov=.
 
-        - store_artifacts:
-            path: htmlcov/
+      - store_artifacts:
+          path: htmlcov/
 
 
   build-and-publish:
@@ -59,14 +59,14 @@ jobs:
 workflows:
   commit:
     jobs:
-      - test:
+      - unittest:
           filters:
             tags:
               ignore:
                 /^[0-9]+(\.[0-9]+)*$/
       - build:
           requires:
-            test
+            - unittest
           filters:
             tags:
               ignore:
