@@ -67,7 +67,7 @@ class StageLinQDiscovery(StageLinQMessage):
         self.token = StageLinQToken()
         self.length = 0
 
-    def encode(self, discovery_data) -> StageLinQDiscoveryData:
+    def encodeFrame(self, discovery_data) -> StageLinQDiscoveryData:
         if self.verify_discovery_data(discovery_data) != PyStageLinQError.STAGELINQOK:
             return PyStageLinQError.INVALIDDISCOVERYDATA
 
@@ -81,28 +81,23 @@ class StageLinQDiscovery(StageLinQMessage):
 
         return discovery_frame
 
-
-
     def verify_discovery_data(self, discovery_data) -> StageLinQDiscoveryData:
         ret = PyStageLinQError.STAGELINQOK
         if (0 > discovery_data.ReqServicePort) or (65535 < discovery_data.ReqServicePort):
             ret = PyStageLinQError.INVALIDDISCOVERYDATA
         return ret
 
-    def get_data(self):
+    def get(self):
         return StageLinQDiscoveryData(self.token, self.device_name, self.connection_type, self.sw_name, self.sw_version,
                                       self.Port)
 
     def decodeFrame(self, frame):
 
         # Local Constants
-
-
         token_start = self.magic_flag_stop
         token_length = StageLinQToken.TOKENLENGTH
         token_stop = token_start + token_length
         device_name_size_start = token_stop
-
 
         if len(frame) < self.magic_flag_length:
             return PyStageLinQError.INVALIDFRAME
@@ -120,6 +115,7 @@ class StageLinQDiscovery(StageLinQMessage):
         sw_name_start, self.connection_type = self.ReadNetworkString(frame, connection_type_start)
         sw_version_start, self.sw_name = self.ReadNetworkString(frame, sw_name_start)
         port_start, self.sw_version = self.ReadNetworkString(frame, sw_version_start)
+        print(port_start)
         port_stop = port_start + self.port_length
         self.Port = int.from_bytes(frame[port_start:port_stop], byteorder='big')
         self.length = port_stop
@@ -137,7 +133,7 @@ class StageLinQServiceAnnouncement(StageLinQMessage):
         self.Port = None
         self.length = None
 
-    def encode(self, service_announcement_data) -> StageLinQServiceAnnouncementData:
+    def encodeFrame(self, service_announcement_data) -> StageLinQServiceAnnouncementData:
         request_frame = StageLinQMessageIDs.StageLinQServiceAnnouncementData
         request_frame += service_announcement_data.Token.get_token().to_bytes(StageLinQToken.TOKENLENGTH, byteorder='big')
         request_frame += self.WriteNetworkString(service_announcement_data.Service)
@@ -180,7 +176,7 @@ class StageLinQReference(StageLinQMessage):
         self.Reference = None
         self.length = self.magic_flag_length + StageLinQToken.TOKENLENGTH*2 + self.reference_len
 
-    def encode(self, reference_data) -> StageLinQReferenceData:
+    def encodeFrame(self, reference_data) -> StageLinQReferenceData:
         request_frame = StageLinQMessageIDs.StageLinQReferenceData
         request_frame += reference_data.OwnToken.get_token().to_bytes(StageLinQToken.TOKENLENGTH, byteorder='big')
         request_frame += reference_data.DeviceToken.get_token().to_bytes(StageLinQToken.TOKENLENGTH, byteorder='big')
@@ -188,6 +184,10 @@ class StageLinQReference(StageLinQMessage):
         return request_frame
 
     def decodeFrame(self, frame):
+
+        if len(frame) < self.magic_flag_length:
+            return PyStageLinQError.INVALIDFRAME
+
         # Verify frametype
         if frame[self.magic_flag_start:self.magic_flag_stop] != StageLinQMessageIDs.StageLinQReferenceData:
             return PyStageLinQError.INVALIDFRAME
@@ -216,14 +216,14 @@ class StageLinQRequestServices(StageLinQMessage):
     def __init__(self):
         self.Token = StageLinQToken()
 
-    def encode(self, ServiceRequestData) -> StageLinQServiceRequestService:
+    def encodeFrame(self, ServiceRequestData) -> StageLinQServiceRequestService:
         request_frame = StageLinQMessageIDs.StageLinQServiceRequestData
         request_frame += ServiceRequestData.Token.get_token().to_bytes(StageLinQToken.TOKENLENGTH, byteorder='big')
         return request_frame
 
     def decodeFrame(self, frame):
         # Verify frame
-        if len(frame) < self.length :
+        if len(frame) < self.length:
             return PyStageLinQError.INVALIDFRAME
         if frame[self.magic_flag_start:self.magic_flag_stop] != StageLinQMessageIDs.StageLinQServiceRequestData:
             return PyStageLinQError.INVALIDFRAME

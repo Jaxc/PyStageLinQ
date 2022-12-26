@@ -438,7 +438,7 @@ class StateMapSubscription:
 
     async def Subscribe(self, own_token):
         self.reader,  self.writer = await asyncio.open_connection(self.service_handle.ip, self.service_handle.port)
-        self.writer.write(StageLinQServiceAnnouncement().encode(
+        self.writer.write(StageLinQServiceAnnouncement().encodeFrame(
             StageLinQServiceAnnouncementData(Token=own_token, Service=self.service_handle.service,
                                              Port=self.writer.transport.get_extra_info('sockname')[1])))
         await self.writer.drain()

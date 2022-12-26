@@ -15,7 +15,7 @@ class StageLinQService:
         self.reader = None
         self.writer = None
         self.Ip = ip
-        self.Port = discovery_frame.get_data().ReqServicePort
+        self.Port = discovery_frame.get().ReqServicePort
         self.OwnToken = own_token
         self.DeviceToken = Token.StageLinQToken()
         self.service_list = []
@@ -59,7 +59,7 @@ class StageLinQService:
         await asyncio.sleep(delay)
 
         out_data = StageLinQRequestServices()
-        service_request_message = out_data.encode(StageLinQServiceRequestService(Token=self.OwnToken))
+        service_request_message = out_data.encodeFrame(StageLinQServiceRequestService(Token=self.OwnToken))
 
         self.writer.write(service_request_message)
         await self.writer.drain()
@@ -94,7 +94,7 @@ class StageLinQService:
 
             frames = self.DecodeMultiframe(response)
             if frames is None:
-                #something went wrong during decoding, lets throw away the frame and hope it doesn't happen again
+                # Something went wrong during decoding, lets throw away the frame and hope it doesn't happen again
                 print(f"Error while decoding the frame")
                 continue
 
@@ -126,9 +126,9 @@ class StageLinQService:
     async def send_reference_message(self):
         reference_data = StageLinQReferenceData(OwnToken=self.OwnToken, DeviceToken=self.DeviceToken, Reference=0)
         reference_message = StageLinQReference()
-        reference_message.encode(reference_data)
+        reference_message.encodeFrame(reference_data)
 
-        self.writer.write(reference_message.encode(reference_data))
+        self.writer.write(reference_message.encodeFrame(reference_data))
         await self.writer.drain()
 
     def DecodeMultiframe(self, frame):
