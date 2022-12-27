@@ -112,7 +112,7 @@ class PyStageLinQ:
         # Create socket
         discover_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
-            discover_socket.bind((self.ip, self.StageLinQ_discovery_port))  # bind socket to all interfaces
+            discover_socket.bind((self.ip, self.StageLinQ_discovery_port))  # bind socket StageLinQ interface
         except:
             # Cannot bind to socket, check if IP is correct and link is up
             return PyStageLinQError.CANNOTBINDSOCKET
