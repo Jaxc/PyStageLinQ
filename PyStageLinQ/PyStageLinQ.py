@@ -35,7 +35,7 @@ class PyStageLinQ:
 
     def __init__(self,
                  new_device_found_callback: Callable[[str, StageLinQDiscovery, EngineServices.ServiceHandle], None],
-                 name: str = "Hello StageLinQ World"):
+                 name: str = "Hello StageLinQ World", ip = "169.254.13.37"):
         self.name = name
         self.OwnToken = StageLinQToken()
         self.discovery_info = None
@@ -45,6 +45,8 @@ class PyStageLinQ:
                                                      SwVersion="1.0.0", ReqServicePort=self.REQUESTSERVICEPORT)
 
         self.device_list = Device.DeviceList()
+
+        self.ip = ip
 
         self.tasks = set()
         self.found_services = []
@@ -109,7 +111,11 @@ class PyStageLinQ:
 
         # Create socket
         discover_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        discover_socket.bind(("", self.StageLinQ_discovery_port))  # bind socket to all interfaces
+        try:
+            discover_socket.bind((self.ip, self.StageLinQ_discovery_port))  # bind socket to all interfaces
+        except:
+            # Cannot bind to socket, check if IP is correct and link is up
+            return PyStageLinQError.CANNOTBINDSOCKET
         discover_socket.setblocking(False)
 
         loop_timeout = time.time() + timeout
@@ -205,7 +211,7 @@ This function is used to subscribe to a statemap service provided by a StageLinQ
             await asyncio.sleep(0.5)
 
     async def _py_stage_lin_q_strapper(self):
-        await self._discover_stagelinq_device(timeout=2)
+        return await self._discover_stagelinq_device(timeout=2)
 
     def stop(self):
         self._stop()

@@ -116,7 +116,7 @@ class StageLinQDiscovery(StageLinQMessage):
         sw_name_start, self.connection_type = self.read_network_string(frame, connection_type_start)
         sw_version_start, self.sw_name = self.read_network_string(frame, sw_name_start)
         port_start, self.sw_version = self.read_network_string(frame, sw_version_start)
-        print(port_start)
+
         port_stop = port_start + self.port_length
         self.Port = int.from_bytes(frame[port_start:port_stop], byteorder='big')
         self.length = port_stop
