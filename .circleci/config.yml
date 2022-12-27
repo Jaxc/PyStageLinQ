@@ -34,7 +34,7 @@ jobs:
 
       - run:
           name: run unittests
-          command: pytest --cov-report html --cov=PyStageLinQ
+          command: pytest --cov-report html --cov=PyStageLinQ --cov-branch
 
       - codecov/upload
 
