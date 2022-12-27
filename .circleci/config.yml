@@ -36,6 +36,8 @@ jobs:
           name: run unittests
           command: pytest --cov-report html --cov=PyStageLinQ
 
+      - codecov/upload
+
       - store_artifacts:
           path: htmlcov/
 
@@ -65,8 +67,7 @@ workflows:
             tags:
               ignore:
                 /^[0-9]+(\.[0-9]+)*$/
-          post-steps:
-              - codecov/upload
+              
       - build:
           requires:
             - unittest
