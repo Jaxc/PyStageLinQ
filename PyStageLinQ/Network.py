@@ -10,7 +10,7 @@ from . import Token
 
 
 class StageLinQService:
-    def __init__(self, ip, discovery_frame, own_token, service_found_callback):
+    def __init__(self, ip, discovery_frame: StageLinQDiscovery, own_token, service_found_callback):
         self.Socket = None
         self.reference_task = None
         self.reader = None
