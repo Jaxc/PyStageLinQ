@@ -22,9 +22,8 @@ def test__get_randomized_bytes_length(token):
 
 
 def test_generate_token_zero(token, monkeypatch):
-
     def mock_random_0(length):
-        return bytearray((0).to_bytes(length, 'big'))
+        return bytearray((0).to_bytes(length, "big"))
 
     monkeypatch.setattr(token, "_get_randomized_bytes", mock_random_0)
 
@@ -33,14 +32,40 @@ def test_generate_token_zero(token, monkeypatch):
 
 
 def test_generate_token_msb1(token, monkeypatch):
-
     def mock_random_msb1(length):
-        return bytearray(int("80000000000000000000000000000001", length).to_bytes(length, 'big'))
+        return bytearray(
+            int("80000000000000000000000000000001", length).to_bytes(length, "big")
+        )
 
     monkeypatch.setattr(token, "_get_randomized_bytes", mock_random_msb1)
 
     token.generate_token()
     assert token.get_token() == 1
+
+
+def test_set_token_wrong_input_type(token):
+    # test type
+    testValue = None
+    assert token.set_token(testValue) == PyStageLinQError.INVALIDTOKENTYPE
+
+
+def test_set_token_valid_input(token, monkeypatch):
+    def ret_ok(_):
+        return PyStageLinQError.STAGELINQOK
+
+    monkeypatch.setattr(token, "validate_token", ret_ok)
+    testValue = 0
+    assert token.set_token(testValue) == PyStageLinQError.STAGELINQOK
+    assert token.get_token() == testValue
+
+
+def test_set_token_invalid_input_value(token, monkeypatch):
+    def ret_nok(_):
+        return PyStageLinQError.INVALIDTOKEN
+
+    testValue = 0
+    monkeypatch.setattr(token, "validate_token", ret_nok)
+    assert token.set_token(testValue) == PyStageLinQError.INVALIDTOKEN
 
 
 def test_validate_token_ok(token):
@@ -53,36 +78,17 @@ def test_validate_token_ok(token):
     assert goodResult == PyStageLinQError.STAGELINQOK
 
 
-def test_validate_token_invalid(token):
+def test_validate_token_invalid_length(token):
 
     badValue = int("800000000000000000000000000000000", 17)
     badResult = token.validate_token(badValue)
 
+    assert badResult == PyStageLinQError.INVALIDTOKENLENGTH
+
+
+def test_validate_token_invalid_value(token, monkeypatch):
+
+    badValue = int("-1", 16)
+    badResult = token.validate_token(badValue)
+
     assert badResult == PyStageLinQError.INVALIDTOKEN
-
-
-def test_set_token_wrong_input_type(token):
-    # test type
-    testValue = None
-    assert token.set_token(testValue) == PyStageLinQError.INVALIDTOKENTYPE
-
-
-def test_set_token_valid_input(token, monkeypatch):
-
-    def ret_ok(_):
-        return PyStageLinQError.STAGELINQOK
-
-    monkeypatch.setattr(token, "validate_token", ret_ok)
-    testValue = 0
-    assert token.set_token(testValue) == PyStageLinQError.STAGELINQOK
-    assert token.get_token() == testValue
-
-
-def test_set_token_invalid_input_value(token, monkeypatch):
-
-    def ret_nok(_):
-        return PyStageLinQError.INVALIDTOKEN
-
-    testValue = 0
-    monkeypatch.setattr(token, "validate_token", ret_nok)
-    assert token.set_token(testValue) == PyStageLinQError.INVALIDTOKEN
