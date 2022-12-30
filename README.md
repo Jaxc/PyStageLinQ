@@ -1,9 +1,11 @@
 [![Build Status](https://img.shields.io/circleci/build/github/Jaxc/PyStageLinQ/main?style=plastic)](https://app.circleci.com/pipelines/github/Jaxc/PyStageLinQ?branch=main)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/PyStageLinQ?style=plastic)
-![PyPI](https://img.shields.io/pypi/v/PyStageLinQ?style=plastic)
-![PyPI - License](https://img.shields.io/pypi/l/PyStageLinQ?style=plastic)
-![Read the Docs](https://img.shields.io/readthedocs/pystagelinq?style=plastic)
-![Codecov](https://img.shields.io/codecov/c/github/Jaxc/PyStageLinQ?style=plastic)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/PyStageLinQ?style=plastic)](https://pypi.org/project/PyStageLinQ/)
+<picture>
+  <img alt="PyPi version" src="https://img.shields.io/pypi/v/PyStageLinQ?style=plastic">
+</picture>
+[![PyPI - License](https://img.shields.io/pypi/l/PyStageLinQ?style=plastic)](https://en.wikipedia.org/wiki/MIT_License)
+[![Read the Docs](https://img.shields.io/readthedocs/pystagelinq?style=plastic)](https://pystagelinq.readthedocs.io/en/latest/)
+[![Codecov](https://img.shields.io/codecov/c/github/Jaxc/PyStageLinQ?style=plastic)](https://app.codecov.io/gh/Jaxc/PyStageLinQ)
 [![CodeFactor](https://www.codefactor.io/repository/github/jaxc/pystagelinq/badge/main?style=plastic)](https://www.codefactor.io/repository/github/jaxc/pystagelinq/overview/main)
 # Overview
 This Python module decodes part of the StageLinQ protocol used by Denon DJ equipment. In its current state it is
