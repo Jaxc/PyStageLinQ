@@ -29,7 +29,7 @@ class StageLinQToken:
         if randomized_bytes[0] >= 128:
             randomized_bytes[0] = randomized_bytes[0] - 128
 
-        self.token = int.from_bytes(randomized_bytes, byteorder='big')
+        self.token = int.from_bytes(randomized_bytes, byteorder="big")
 
     @staticmethod
     def _get_randomized_bytes(length: int) -> bytes:
@@ -55,17 +55,16 @@ class StageLinQToken:
 
     @staticmethod
     def validate_token(token: int) -> PyStageLinQError:
-        ret = PyStageLinQError.INVALIDTOKEN
         # The token is validated by converting it to a 16 byte array and then back to an int. If the value is the same
         # the token is considered valid
         if token.bit_length() <= StageLinQToken.TOKENLENGTH * 8:
-            try:
-                token_bytes = token.to_bytes(StageLinQToken.TOKENLENGTH, byteorder='big')
-                if token == int.from_bytes(token_bytes, byteorder='big'):
-                    ret = PyStageLinQError.STAGELINQOK
-            except OverflowError:
+            if token > 0:
+                ret = PyStageLinQError.STAGELINQOK
+
+            else:
                 ret = PyStageLinQError.INVALIDTOKEN
 
-
+        else:
+            ret = PyStageLinQError.INVALIDTOKENLENGTH
 
         return ret
