@@ -36,31 +36,48 @@ def test_encode_frame(stagelinq_request_services, dummy_token):
 
     test_output = stagelinq_request_services.encode_frame(test_data)
 
-    assert PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQServiceRequestData == test_output[0:4]
-    assert dummy_token.get_token().to_bytes(16, byteorder='big') == test_output[4:20]
+    assert (
+        PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQServiceRequestData
+        == test_output[0:4]
+    )
+    assert dummy_token.get_token().to_bytes(16, byteorder="big") == test_output[4:20]
 
 
 def test_decode_frame_invalid_magic_flag_length(stagelinq_request_services):
-    assert stagelinq_request_services.decode_frame(random.randbytes(3)) == PyStageLinQError.INVALIDFRAME
+    assert (
+        stagelinq_request_services.decode_frame(random.randbytes(3))
+        == PyStageLinQError.INVALIDFRAME
+    )
 
 
 def test_decode_frame_invalid_frame_id(stagelinq_request_services):
-    assert stagelinq_request_services.decode_frame("airJ".encode() +
-                                                   random.randbytes(16)) == PyStageLinQError.INVALIDFRAME
+    assert (
+        stagelinq_request_services.decode_frame("airJ".encode() + random.randbytes(16))
+        == PyStageLinQError.INVALIDFRAME
+    )
 
 
 def test_decode_frame_valid_input(stagelinq_request_services, dummy_token):
-    dummy_frame = PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQServiceRequestData + \
-                  dummy_token.get_token().to_bytes(16, byteorder='big')
+    dummy_frame = (
+        PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQServiceRequestData
+        + dummy_token.get_token().to_bytes(16, byteorder="big")
+    )
 
-    assert stagelinq_request_services.decode_frame(dummy_frame) == PyStageLinQError.STAGELINQOK
+    assert (
+        stagelinq_request_services.decode_frame(dummy_frame)
+        == PyStageLinQError.STAGELINQOK
+    )
 
-    assert stagelinq_request_services.Token == dummy_token.get_token().to_bytes(16, byteorder='big')
+    assert stagelinq_request_services.Token == dummy_token.get_token().to_bytes(
+        16, byteorder="big"
+    )
 
 
 def test_verify_get_data(stagelinq_request_services, dummy_token):
-    stagelinq_request_services.Token = dummy_token.get_token().to_bytes(16, byteorder='big')
+    stagelinq_request_services.Token = dummy_token.get_token().to_bytes(
+        16, byteorder="big"
+    )
 
     data = stagelinq_request_services.get()
 
-    assert data.Token == dummy_token.get_token().to_bytes(16, byteorder='big')
+    assert data.Token == dummy_token.get_token().to_bytes(16, byteorder="big")

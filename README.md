@@ -7,6 +7,7 @@
 [![Read the Docs](https://img.shields.io/readthedocs/pystagelinq?style=plastic)](https://pystagelinq.readthedocs.io/en/latest/)
 [![Codecov](https://img.shields.io/codecov/c/github/Jaxc/PyStageLinQ?style=plastic)](https://app.codecov.io/gh/Jaxc/PyStageLinQ)
 [![CodeFactor](https://www.codefactor.io/repository/github/jaxc/pystagelinq/badge/main?style=plastic)](https://www.codefactor.io/repository/github/jaxc/pystagelinq/overview/main)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 # Overview
 This Python module decodes part of the StageLinQ protocol used by Denon DJ equipment. In its current state it is
 possible to read out information like track information, fader position (Crossfader, channel volume, pitchfader), BPM 

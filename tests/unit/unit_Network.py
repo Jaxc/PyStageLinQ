@@ -8,8 +8,7 @@ from pytest import MonkeyPatch
 import random
 
 # initialize random values as init
-ip_dummy = ".".join(map(str, (random.randint(0, 255)
-                        for _ in range(4))))
+ip_dummy = ".".join(map(str, (random.randint(0, 255) for _ in range(4))))
 
 
 def somecallback():
@@ -33,5 +32,4 @@ def StageLinQService():
     discovery_frame += WriteNetworkString(discovery_data.SwVersion)
     discovery_frame += ReqServicePort.to_bytes(self.port_length, byteorder='big')"""
 
-    #return PyStageLinQ.Network.StageLinQService(ip_dummy, discovery_frame, random.randbytes(16), somecallback)
-
+    # return PyStageLinQ.Network.StageLinQService(ip_dummy, discovery_frame, random.randbytes(16), somecallback)

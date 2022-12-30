@@ -37,49 +37,79 @@ def test_init_values(stagelinq_service_announcement):
     assert stagelinq_service_announcement.reference_len == 8
 
 
-def test_encode_frame_valid_input(stagelinq_service_announcement, dummy_token, dummy_port, monkeypatch):
+def test_encode_frame_valid_input(
+    stagelinq_service_announcement, dummy_token, dummy_port, monkeypatch
+):
     def write_network_string_mock(string):
         return string.encode()
 
-    monkeypatch.setattr(stagelinq_service_announcement, 'write_network_string', write_network_string_mock)
+    monkeypatch.setattr(
+        stagelinq_service_announcement,
+        "write_network_string",
+        write_network_string_mock,
+    )
 
     service = "Yes please!"
-    test_data = PyStageLinQ.DataClasses.StageLinQServiceAnnouncementData(dummy_token, service, dummy_port)
+    test_data = PyStageLinQ.DataClasses.StageLinQServiceAnnouncementData(
+        dummy_token, service, dummy_port
+    )
 
     test_output = stagelinq_service_announcement.encode_frame(test_data)
 
-    assert PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQServiceAnnouncementData == test_output[0:4]
-    assert dummy_token.get_token().to_bytes(16, byteorder='big') == test_output[4:20]
+    assert (
+        PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQServiceAnnouncementData
+        == test_output[0:4]
+    )
+    assert dummy_token.get_token().to_bytes(16, byteorder="big") == test_output[4:20]
     assert service.encode() == test_output[20:31]
-    assert dummy_port.to_bytes(2, byteorder='big') == test_output[31:33]
+    assert dummy_port.to_bytes(2, byteorder="big") == test_output[31:33]
 
 
 def test_decode_frame_invalid_magic_flag_length(stagelinq_service_announcement):
-    assert stagelinq_service_announcement.decode_frame(random.randbytes(3)) == PyStageLinQError.INVALIDFRAME
+    assert (
+        stagelinq_service_announcement.decode_frame(random.randbytes(3))
+        == PyStageLinQError.INVALIDFRAME
+    )
 
 
 def test_decode_frame_invalid_frame_id(stagelinq_service_announcement):
-    assert stagelinq_service_announcement.decode_frame("airJ".encode()) == PyStageLinQError.INVALIDFRAME
+    assert (
+        stagelinq_service_announcement.decode_frame("airJ".encode())
+        == PyStageLinQError.INVALIDFRAME
+    )
 
 
-def test_decode_frame_valid_input(stagelinq_service_announcement, dummy_token, dummy_port, monkeypatch):
+def test_decode_frame_valid_input(
+    stagelinq_service_announcement, dummy_token, dummy_port, monkeypatch
+):
     test_string = "hello"
 
     def read_network_string_mock(_, start_offset):
         fields = [dummy_token.get_token(), test_string, dummy_port]
         return start_offset + 10, fields[start_offset - 20]
 
-    monkeypatch.setattr(stagelinq_service_announcement, 'read_network_string', read_network_string_mock)
+    monkeypatch.setattr(
+        stagelinq_service_announcement, "read_network_string", read_network_string_mock
+    )
 
-    dummy_frame = PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQServiceAnnouncementData + \
-                  dummy_token.get_token().to_bytes(16, byteorder='big') + \
-                  test_string.encode(encoding='UTF-16be') + \
-                  dummy_port.to_bytes(2, byteorder='big')
+    dummy_frame = (
+        PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQServiceAnnouncementData
+        + dummy_token.get_token().to_bytes(16, byteorder="big")
+        + test_string.encode(encoding="UTF-16be")
+        + dummy_port.to_bytes(2, byteorder="big")
+    )
 
-    assert stagelinq_service_announcement.decode_frame(dummy_frame) == PyStageLinQError.STAGELINQOK
+    assert (
+        stagelinq_service_announcement.decode_frame(dummy_frame)
+        == PyStageLinQError.STAGELINQOK
+    )
 
-    assert stagelinq_service_announcement.Token == dummy_token.get_token().to_bytes(16, byteorder='big')
-    assert stagelinq_service_announcement.Port.to_bytes(2, byteorder='big') == dummy_port.to_bytes(2, byteorder='big')
+    assert stagelinq_service_announcement.Token == dummy_token.get_token().to_bytes(
+        16, byteorder="big"
+    )
+    assert stagelinq_service_announcement.Port.to_bytes(
+        2, byteorder="big"
+    ) == dummy_port.to_bytes(2, byteorder="big")
 
     assert stagelinq_service_announcement.get_len() == 32
 
@@ -87,12 +117,14 @@ def test_decode_frame_valid_input(stagelinq_service_announcement, dummy_token, d
 def test_verify_get_data(stagelinq_service_announcement, dummy_token, dummy_port):
     test_string = "hello"
 
-    stagelinq_service_announcement.Token = dummy_token.get_token().to_bytes(16, byteorder='big')
+    stagelinq_service_announcement.Token = dummy_token.get_token().to_bytes(
+        16, byteorder="big"
+    )
     stagelinq_service_announcement.Service = test_string
     stagelinq_service_announcement.Port = dummy_port
 
     data = stagelinq_service_announcement.get()
 
-    assert data.Token == dummy_token.get_token().to_bytes(16, byteorder='big')
+    assert data.Token == dummy_token.get_token().to_bytes(16, byteorder="big")
     assert data.Service == test_string
     assert data.Port == dummy_port

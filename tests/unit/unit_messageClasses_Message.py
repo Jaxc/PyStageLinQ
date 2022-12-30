@@ -24,21 +24,25 @@ def test_write_network_string(stagelinq_message):
 
     test_output = stagelinq_message.write_network_string(test_data)
 
-    assert (10).to_bytes(4, byteorder='big') == test_output[0:4]
-    assert test_data.encode(encoding='UTF-16be') == test_output[4:14]
+    assert (10).to_bytes(4, byteorder="big") == test_output[0:4]
+    assert test_data.encode(encoding="UTF-16be") == test_output[4:14]
 
 
 def test_read_network_string_incorrect_length(stagelinq_message):
 
-    test_data = (20).to_bytes(4, byteorder='big') + "hello".encode(encoding='UTF-16be')
+    test_data = (20).to_bytes(4, byteorder="big") + "hello".encode(encoding="UTF-16be")
 
     assert stagelinq_message.read_network_string(test_data, 0) is None
 
 
 def test_read_network_string_valid_input(stagelinq_message):
 
-    test_data = (10).to_bytes(4, byteorder='big') + "hello".encode(encoding='UTF-16be') + \
-                (14).to_bytes(4, byteorder='big') + "goodbye".encode(encoding='UTF-16be')
+    test_data = (
+        (10).to_bytes(4, byteorder="big")
+        + "hello".encode(encoding="UTF-16be")
+        + (14).to_bytes(4, byteorder="big")
+        + "goodbye".encode(encoding="UTF-16be")
+    )
 
     test_output = stagelinq_message.read_network_string(test_data, 0)
 

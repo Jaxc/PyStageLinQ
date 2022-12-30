@@ -10,7 +10,9 @@ from . import Token
 
 
 class StageLinQService:
-    def __init__(self, ip, discovery_frame: StageLinQDiscovery, own_token, service_found_callback):
+    def __init__(
+        self, ip, discovery_frame: StageLinQDiscovery, own_token, service_found_callback
+    ):
         self.Socket = None
         self.reference_task = None
         self.reader = None
@@ -35,8 +37,14 @@ class StageLinQService:
         if self.services_available:
             return_list = []
             for service in self.service_list:
-                return_list.append(EngineServices.ServiceHandle(device=self.device_name, ip=self.Ip, service=service[0],
-                                                                port=service[1]))
+                return_list.append(
+                    EngineServices.ServiceHandle(
+                        device=self.device_name,
+                        ip=self.Ip,
+                        service=service[0],
+                        port=service[1],
+                    )
+                )
             return return_list
 
     async def get_tasks(self):
@@ -60,7 +68,9 @@ class StageLinQService:
         await asyncio.sleep(delay)
 
         out_data = StageLinQRequestServices()
-        service_request_message = out_data.encode_frame(StageLinQServiceRequestService(Token=self.OwnToken))
+        service_request_message = out_data.encode_frame(
+            StageLinQServiceRequestService(Token=self.OwnToken)
+        )
 
         self.writer.write(service_request_message)
         await self.writer.drain()
@@ -80,7 +90,9 @@ class StageLinQService:
         # Send first message
 
         self.reader, self.writer = await asyncio.open_connection(self.Ip, self.Port)
-        self.reference_task = asyncio.create_task(self.send_reference_message_periodically())
+        self.reference_task = asyncio.create_task(
+            self.send_reference_message_periodically()
+        )
         asyncio.create_task(self.send_request_frame(0))
         # asyncio.create_task(self.send_request_frame(0.2))
 
@@ -91,7 +103,9 @@ class StageLinQService:
 
             if len(response) == 0:
                 # Socket closed
-                raise Exception(f"Remote socket for IP:{self.Ip} Port:{self.Port} closed!")
+                raise Exception(
+                    f"Remote socket for IP:{self.Ip} Port:{self.Port} closed!"
+                )
 
             frames = self.decode_multiframe(response)
             if frames is None:
@@ -106,8 +120,13 @@ class StageLinQService:
                     adding_services = True
 
                 if self.DeviceToken.get_token() == 0:
-                    if type(frame) is StageLinQServiceAnnouncementData or type(frame) is StageLinQServiceRequestService:
-                        self.DeviceToken.set_token(int.from_bytes(frame.Token, byteorder='big'))
+                    if (
+                        type(frame) is StageLinQServiceAnnouncementData
+                        or type(frame) is StageLinQServiceRequestService
+                    ):
+                        self.DeviceToken.set_token(
+                            int.from_bytes(frame.Token, byteorder="big")
+                        )
 
                 if type(frame) is StageLinQReference:
                     asyncio.create_task(self.send_reference_message())
@@ -125,7 +144,9 @@ class StageLinQService:
             await asyncio.sleep(0.250)
 
     async def send_reference_message(self):
-        reference_data = StageLinQReferenceData(OwnToken=self.OwnToken, DeviceToken=self.DeviceToken, Reference=0)
+        reference_data = StageLinQReferenceData(
+            OwnToken=self.OwnToken, DeviceToken=self.DeviceToken, Reference=0
+        )
         reference_message = StageLinQReference()
         reference_message.encode_frame(reference_data)
 
@@ -136,7 +157,7 @@ class StageLinQService:
     def decode_multiframe(frame):
         subframes = []
         while len(frame) > 4:
-            match (int.from_bytes(frame[0:4], byteorder='big')):
+            match (int.from_bytes(frame[0:4], byteorder="big")):
                 case 0:
                     data = StageLinQServiceAnnouncement()
                 case 1:
@@ -150,7 +171,7 @@ class StageLinQService:
                 return None
 
             subframes.append(data.get())
-            frame = frame[data.get_len():]
+            frame = frame[data.get_len() :]
 
         return subframes
 

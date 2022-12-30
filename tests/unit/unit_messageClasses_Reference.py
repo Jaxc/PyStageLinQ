@@ -46,46 +46,66 @@ def test_init_values(stagelinq_reference):
 
 def test_encode_frame(stagelinq_reference, owntoken, devicetoken):
 
-    test_data = PyStageLinQ.DataClasses.StageLinQReferenceData(owntoken, devicetoken, 313)
+    test_data = PyStageLinQ.DataClasses.StageLinQReferenceData(
+        owntoken, devicetoken, 313
+    )
 
     test_output = stagelinq_reference.encode_frame(test_data)
 
-    assert PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQReferenceData == test_output[0:4]
-    assert owntoken.get_token().to_bytes(16, byteorder='big') == test_output[4:20]
-    assert devicetoken.get_token().to_bytes(16, byteorder='big') == test_output[20:36]
-    assert (313).to_bytes(8, byteorder='big') == test_output[36:44]
+    assert (
+        PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQReferenceData
+        == test_output[0:4]
+    )
+    assert owntoken.get_token().to_bytes(16, byteorder="big") == test_output[4:20]
+    assert devicetoken.get_token().to_bytes(16, byteorder="big") == test_output[20:36]
+    assert (313).to_bytes(8, byteorder="big") == test_output[36:44]
 
 
 def test_decode_frame_invalid_magic_flag_length(stagelinq_reference):
 
-    assert stagelinq_reference.decode_frame(random.randbytes(3)) == PyStageLinQError.INVALIDFRAME
+    assert (
+        stagelinq_reference.decode_frame(random.randbytes(3))
+        == PyStageLinQError.INVALIDFRAME
+    )
 
 
 def test_decode_frame_invalid_frame_id(stagelinq_reference):
-    assert stagelinq_reference.decode_frame("airJ".encode()) == PyStageLinQError.INVALIDFRAME
+    assert (
+        stagelinq_reference.decode_frame("airJ".encode())
+        == PyStageLinQError.INVALIDFRAME
+    )
 
 
 def test_decode_frame_valid_input(stagelinq_reference, owntoken, devicetoken):
 
-    dummy_frame = PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQReferenceData + \
-                  owntoken.get_token().to_bytes(16, byteorder='big') + \
-                  devicetoken.get_token().to_bytes(16, byteorder='big') + (313).to_bytes(8, byteorder='big')
+    dummy_frame = (
+        PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQReferenceData
+        + owntoken.get_token().to_bytes(16, byteorder="big")
+        + devicetoken.get_token().to_bytes(16, byteorder="big")
+        + (313).to_bytes(8, byteorder="big")
+    )
 
     assert stagelinq_reference.decode_frame(dummy_frame) == PyStageLinQError.STAGELINQOK
 
-    assert stagelinq_reference.OwnToken == owntoken.get_token().to_bytes(16, byteorder='big')
-    assert stagelinq_reference.DeviceToken == devicetoken.get_token().to_bytes(16, byteorder='big')
+    assert stagelinq_reference.OwnToken == owntoken.get_token().to_bytes(
+        16, byteorder="big"
+    )
+    assert stagelinq_reference.DeviceToken == devicetoken.get_token().to_bytes(
+        16, byteorder="big"
+    )
     assert stagelinq_reference.Reference == 313
 
 
 def test_verify_get_data(stagelinq_reference, owntoken, devicetoken):
 
-    stagelinq_reference.OwnToken = owntoken.get_token().to_bytes(16, byteorder='big')
-    stagelinq_reference.DeviceToken = devicetoken.get_token().to_bytes(16, byteorder='big')
+    stagelinq_reference.OwnToken = owntoken.get_token().to_bytes(16, byteorder="big")
+    stagelinq_reference.DeviceToken = devicetoken.get_token().to_bytes(
+        16, byteorder="big"
+    )
     stagelinq_reference.Reference = 313
 
     data = stagelinq_reference.get()
 
-    assert data.OwnToken == owntoken.get_token().to_bytes(16, byteorder='big')
-    assert data.DeviceToken == devicetoken.get_token().to_bytes(16, byteorder='big')
+    assert data.OwnToken == owntoken.get_token().to_bytes(16, byteorder="big")
+    assert data.DeviceToken == devicetoken.get_token().to_bytes(16, byteorder="big")
     assert data.Reference == 313

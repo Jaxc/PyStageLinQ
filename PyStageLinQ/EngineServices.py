@@ -116,8 +116,7 @@ prime_go = {
     "EngineDeck2TrackTrackNetworkPath": "/Engine/Deck2/Track/TrackNetworkPath",
     "EngineDeck2TrackTrackURI": "/Engine/Deck2/Track/TrackUri",
     "EngineDeck2TrackTrackWasPlayed": "/Engine/Deck2/Track/TrackWasPlayed",
-    "EngineDeck3CurrentBPM"
-    "EngineDeckCount": "/Engine/DeckCount",
+    "EngineDeck3CurrentBPM" "EngineDeckCount": "/Engine/DeckCount",
     "MixerCH1faderPosition": "/Mixer/CH1faderPosition",
     "MixerCH2faderPosition": "/Mixer/CH2faderPosition",
     "MixerCH3faderPosition": "/Mixer/CH3faderPosition",
@@ -344,7 +343,6 @@ class ServiceHandle:
 
 
 class StateMapSubscription:
-
     def __init__(self, service_handle, data_callback, subscription_list):
         self.service_handle: ServiceHandle = service_handle
         self._callback = data_callback
@@ -375,7 +373,7 @@ class StateMapSubscription:
             if len(blocks[-1]) < 4:
                 trailing_data = blocks[-1]
 
-            if len(blocks[-1]) != int.from_bytes(blocks[-1][0:4], byteorder='big') + 4:
+            if len(blocks[-1]) != int.from_bytes(blocks[-1][0:4], byteorder="big") + 4:
                 # Last block not completely received
                 trailing_data = blocks.pop()
 
@@ -391,7 +389,7 @@ class StateMapSubscription:
     def decode_multi_block(frame):
         blocks = []
         while len(frame) > 4:
-            block_len = int.from_bytes(frame[0:4], byteorder='big') + 4
+            block_len = int.from_bytes(frame[0:4], byteorder="big") + 4
             blocks.append(frame[0:block_len])
             frame = frame[block_len:]
 
@@ -407,7 +405,7 @@ class StateMapSubscription:
         if len(block) < 4:
             raise Exception("Block is to short to contain length")
 
-        block_length = int.from_bytes(block[0:4], byteorder='big')
+        block_length = int.from_bytes(block[0:4], byteorder="big")
 
         # Note: -4 is needed as block_length does not include its own length.
         if len(block) - 4 != block_length:
@@ -422,33 +420,46 @@ class StateMapSubscription:
         # different in the Go implementation
         magic_flag2 = block[8:12]
 
-        path_len = int.from_bytes(block[12:16], byteorder='big')
+        path_len = int.from_bytes(block[12:16], byteorder="big")
         value_len_offset = 16 + path_len
-        path = block[16:value_len_offset].decode(encoding='UTF-16be')
+        path = block[16:value_len_offset].decode(encoding="UTF-16be")
 
         value_offset = value_len_offset + 4
-        value_len = int.from_bytes(block[value_len_offset:value_offset], byteorder='big')
+        value_len = int.from_bytes(
+            block[value_len_offset:value_offset], byteorder="big"
+        )
 
-        value = json.loads(block[value_offset:value_offset + value_len].decode(encoding='UTF-16be'))
+        value = json.loads(
+            block[value_offset : value_offset + value_len].decode(encoding="UTF-16be")
+        )
 
-        return DataClasses.StageLinQStateMapData(block_length, magic_flag, magic_flag2, path_len,
-                                                 path, value_len, value)
+        return DataClasses.StageLinQStateMapData(
+            block_length, magic_flag, magic_flag2, path_len, path, value_len, value
+        )
 
     async def subscribe(self, own_token):
-        self.reader, self.writer = await asyncio.open_connection(self.service_handle.ip, self.service_handle.port)
-        self.writer.write(StageLinQServiceAnnouncement().encode_frame(
-            StageLinQServiceAnnouncementData(Token=own_token, Service=self.service_handle.service,
-                                             Port=self.writer.transport.get_extra_info('sockname')[1])))
+        self.reader, self.writer = await asyncio.open_connection(
+            self.service_handle.ip, self.service_handle.port
+        )
+        self.writer.write(
+            StageLinQServiceAnnouncement().encode_frame(
+                StageLinQServiceAnnouncementData(
+                    Token=own_token,
+                    Service=self.service_handle.service,
+                    Port=self.writer.transport.get_extra_info("sockname")[1],
+                )
+            )
+        )
         await self.writer.drain()
 
         self.state_map_task = asyncio.create_task(self.read_state_map())
 
         for service in self._subscription_list.values():
-            msg = (len(service) * 2 + 8 * 2).to_bytes(4, byteorder='big')
-            msg += bytearray([0x73, 0x6d, 0x61, 0x61])
-            msg += bytearray([0x00, 0x00, 0x07, 0xd2])
+            msg = (len(service) * 2 + 8 * 2).to_bytes(4, byteorder="big")
+            msg += bytearray([0x73, 0x6D, 0x61, 0x61])
+            msg += bytearray([0x00, 0x00, 0x07, 0xD2])
             msg += StageLinQMessage().write_network_string(service)
-            msg += (0).to_bytes(4, byteorder='big')
+            msg += (0).to_bytes(4, byteorder="big")
             self.writer.write(msg)
             await self.writer.drain()
         # small sleep to actually send frame
