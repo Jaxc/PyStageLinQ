@@ -5,8 +5,9 @@ This code is licensed under MIT license (see LICENSE for details)
 
 from dataclasses import dataclass
 import asyncio
+from typing import Callable
 
-from . import DataClasses
+from . import DataClasses, Token
 from .MessageClasses import StageLinQServiceAnnouncement, StageLinQMessage
 from .DataClasses import StageLinQServiceAnnouncementData
 import json
@@ -343,7 +344,12 @@ class ServiceHandle:
 
 
 class StateMapSubscription:
-    def __init__(self, service_handle, data_callback, subscription_list):
+    def __init__(
+        self,
+        service_handle: ServiceHandle,
+        data_callback: Callable[[list[DataClasses.StageLinQStateMapData]], None],
+        subscription_list: dict,
+    ) -> None:
         self.service_handle: ServiceHandle = service_handle
         self._callback = data_callback
         self._subscription_list = subscription_list
@@ -351,42 +357,61 @@ class StateMapSubscription:
         self.writer = None
         self.state_map_task = None
 
-    def get_task(self):
+    def get_task(self) -> asyncio.Task:
         return self.state_map_task
 
-    async def read_state_map(self):
+    async def read_state_map(self) -> None:
 
         trailing_data = bytearray()
         while True:
-            # Massive buffer because I have not figured out how to handle messages over multiple buffers
-            frame = await self.reader.read(8192 * 4)
-
-            # Add data from last received frame
-            frame = trailing_data + frame
-            trailing_data = bytearray()
+            frame = await self.read_frame(trailing_data)
 
             if len(frame) == 0:
                 return
 
-            blocks = self.decode_multi_block(frame)
+            blocks, trailing_data = self.decode_frame(frame)
 
-            if len(blocks[-1]) < 4:
-                trailing_data = blocks[-1]
+            self.handle_data(blocks)
 
-            if len(blocks[-1]) != int.from_bytes(blocks[-1][0:4], byteorder="big") + 4:
-                # Last block not completely received
-                trailing_data = blocks.pop()
+    def decode_frame(self, frame: bytes) -> [list[bytes], bytearray]:
+        blocks = self.decode_multi_block(frame)
+        trailing_data = bytearray()
+        if len(blocks[-1]) < 4:
+            trailing_data = blocks.pop()
+        elif len(blocks[-1]) != int.from_bytes(blocks[-1][0:4], byteorder="big") + 4:
+            # Last block not completely received
+            trailing_data = blocks.pop()
+        return blocks, trailing_data
 
-            received_fields = []
-            for block in blocks:
+    def handle_data(self, blocks: list[bytes]) -> None:
+        received_fields = []
+        verify_error = None
+        for block in blocks:
+            try:
                 received_fields.append(self.verify_block(block))
 
-            if self._callback is not None:
-                pass
-                self._callback(received_fields)
+            except RuntimeError as err:
+                # block corrupted, send error to callback if it exists
+                received_fields = err
+                verify_error = err
+                break
+
+        if self._callback is not None:
+            self._callback(received_fields)
+        else:
+            # To avoid failing silently, the error is reraised if no callback has been defined.
+            if verify_error is not None:
+                raise verify_error from None
+
+    async def read_frame(self, trailing_data) -> bytes:
+        # Massive buffer because I have not figured out how to handle messages over multiple buffers
+        frame = await self.reader.read(8192 * 4)
+        # Add data from last received frame
+        frame = trailing_data + frame
+        return frame
 
     @staticmethod
-    def decode_multi_block(frame):
+    def decode_multi_block(frame: bytes) -> list[bytes]:
         blocks = []
         while len(frame) > 4:
             block_len = int.from_bytes(frame[0:4], byteorder="big") + 4
@@ -400,23 +425,29 @@ class StateMapSubscription:
         return blocks
 
     @staticmethod
-    def verify_block(block):
+    def verify_block(block: bytes) -> DataClasses.StageLinQStateMapData:
 
         if len(block) < 4:
-            raise Exception("Block is to short to contain length")
+            raise RuntimeError("Block is to short to contain length")
 
         block_length = int.from_bytes(block[0:4], byteorder="big")
 
+        if block_length == 0:
+            # No data in the block, this most likely is due to other problem, or will cause problems later.
+            return
+
         # Note: -4 is needed as block_length does not include its own length.
         if len(block) - 4 != block_length:
-            raise Exception("Block invalid: Block length inconsistent with its header")
+            raise RuntimeError(
+                "Block invalid: Block length inconsistent with its header"
+            )
 
         magic_flag = block[4:8].decode()
 
         if magic_flag != "smaa":
-            raise Exception("Block invalid: Could not find magic flag")
+            raise RuntimeError("Block invalid: Could not find magic flag")
 
-        # Magic flag 2 is not checked as I have no idea what it is, it is all 0's for my PrimeGo, but it seems to be
+        # magic_flag2 is not checked as I have no idea what it is, it is all 0's for my PrimeGo, but it seems to be
         # different in the Go implementation
         magic_flag2 = block[8:12]
 
@@ -437,7 +468,7 @@ class StateMapSubscription:
             block_length, magic_flag, magic_flag2, path_len, path, value_len, value
         )
 
-    async def subscribe(self, own_token):
+    async def subscribe(self, own_token: Token.StageLinQToken) -> None:
         self.reader, self.writer = await asyncio.open_connection(
             self.service_handle.ip, self.service_handle.port
         )
@@ -454,6 +485,9 @@ class StateMapSubscription:
 
         self.state_map_task = asyncio.create_task(self.read_state_map())
 
+        await self._send_subscription_requests()
+
+    async def _send_subscription_requests(self):
         for service in self._subscription_list.values():
             msg = (len(service) * 2 + 8 * 2).to_bytes(4, byteorder="big")
             msg += bytearray([0x73, 0x6D, 0x61, 0x61])
