@@ -34,12 +34,15 @@ jobs:
 
       - run:
           name: run unittests
-          command: pytest --cov-report html --cov=PyStageLinQ --cov-branch
+          command: pytest --cov-report html --cov=PyStageLinQ --cov-branch -v --junitxml=tests/results/unit/results.xml
 
       - codecov/upload
 
       - store_artifacts:
           path: htmlcov/
+
+      - store_test_results:
+          path: tests/results
 
 
   build-and-publish:
@@ -75,6 +78,9 @@ workflows:
             tags:
               ignore:
                 /^[0-9]+(\.[0-9]+)*$/
+            branches:
+              only:
+                - main
 
   release:
     jobs:
