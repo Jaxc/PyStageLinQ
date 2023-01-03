@@ -12,7 +12,7 @@ class StageLinQToken:
     token: int
 
     def __init__(self):
-        self.token = 0
+
 
     def generate_token(self):
         """
