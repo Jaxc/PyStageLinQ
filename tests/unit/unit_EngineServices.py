@@ -14,8 +14,8 @@ dummy_subscription_list = [0, 1]
 def dummy_engine_services():
     return PyStageLinQ.EngineServices.StateMapSubscription(
         PyStageLinQ.EngineServices.ServiceHandle(device, ip, service, port),
-        None,
         dummy_subscription_list,
+        None,
     )
 
 

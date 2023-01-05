@@ -34,6 +34,8 @@ class PyStageLinQ:
 
     ANNOUNCE_IP = "169.254.255.255"
 
+    _loopcondition = True
+
     def __init__(
         self,
         new_device_found_callback: Callable[
@@ -44,7 +46,6 @@ class PyStageLinQ:
     ):
         self.name = name
         self.OwnToken = StageLinQToken()
-        self.discovery_info = None
         self.OwnToken.generate_token()
         self.discovery_info = StageLinQDiscoveryData(
             Token=self.OwnToken,
@@ -112,12 +113,17 @@ class PyStageLinQ:
             discovery_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             try:
 
-                discovery_socket.sendto(discovery_frame, (self.ANNOUNCE_IP, 51337))
-            except PermissionError:
-                raise Exception(
-                    f"Cannot write to IP {self.ANNOUNCE_IP}, "
-                    f"this error could be due to that there is no network cart set up with this IP range"
+                discovery_socket.sendto(
+                    discovery_frame, (self.ANNOUNCE_IP, self.StageLinQ_discovery_port)
                 )
+            except PermissionError:
+                raise PermissionError(
+                    f"Cannot write to IP {self.ANNOUNCE_IP}, "
+                    f"this error could be due to that there is no network interface set up with this IP range"
+                )
+
+    def get_loop_condition(self) -> bool:
+        return self._loopcondition
 
     async def _discover_stagelinq_device(self, timeout=10):
         """
@@ -139,7 +145,7 @@ class PyStageLinQ:
 
         loop_timeout = time.time() + timeout
 
-        while True:
+        while self.get_loop_condition():
             await asyncio.sleep(0.1)
             data_available = select.select([discover_socket], [], [], 0)
             if data_available[0]:
@@ -165,28 +171,25 @@ class PyStageLinQ:
                 device_registered = self.device_list.find_registered_device(
                     discovery_frame.get()
                 )
-                if device_registered:
+                if device_registered is True:
                     continue
-                print(discovery_frame.sw_name)
-                stagelinq_device = StageLinQService(
-                    ip, discovery_frame, self.OwnToken, None
-                )
-                service_tasks = await stagelinq_device.get_tasks()
-
-                for task in service_tasks:
-                    self.tasks.add(task)
-
-                self.device_list.register_device(stagelinq_device)
-                await stagelinq_device.wait_for_services(timeout=1)
-
-                if self.new_device_found_callback is not None:
-                    self.new_device_found_callback(
-                        ip, discovery_frame, stagelinq_device.get_services()
-                    )
+                await self._register_new_device(discovery_frame, ip)
 
             if time.time() > loop_timeout:
-                print("No devices found within timeout")
+                # No devices found within timeout
                 return PyStageLinQError.DISCOVERYTIMEOUT
+
+    async def _register_new_device(self, discovery_frame, ip):
+        stagelinq_device = StageLinQService(ip, discovery_frame, self.OwnToken, None)
+        service_tasks = await stagelinq_device.get_tasks()
+        for task in service_tasks:
+            self.tasks.add(task)
+        self.device_list.register_device(stagelinq_device)
+        await stagelinq_device.wait_for_services(timeout=1)
+        if self.new_device_found_callback is not None:
+            self.new_device_found_callback(
+                ip, discovery_frame, stagelinq_device.get_services()
+            )
 
     def subscribe_to_statemap(
         self,
@@ -201,7 +204,7 @@ class PyStageLinQ:
                 :param data_available_callback: Callback for when data is available from StageLinQ device
         """
         if state_map_service.service != "StateMap":
-            raise Exception("Service is not StateMap!")
+            return PyStageLinQError.SERVICENOTRECOGNIZED
 
         # Defer task creation to avoid blocking the calling function
         asyncio.create_task(
@@ -209,13 +212,14 @@ class PyStageLinQ:
                 state_map_service, subscription_list, data_available_callback
             )
         )
+        return PyStageLinQError.STAGELINQOK
 
     async def _subscribe_to_statemap(
         self, state_map_service, subscription_list, data_available_callback
     ):
 
         state_map = EngineServices.StateMapSubscription(
-            state_map_service, data_available_callback, subscription_list
+            state_map_service, subscription_list, data_available_callback
         )
         await state_map.subscribe(self.OwnToken)
 
@@ -224,16 +228,16 @@ class PyStageLinQ:
     async def _start_stagelinq(self, standalone=False):
         # Start the initial tasks of the library
         self.tasks.add(asyncio.create_task(self._periodic_announcement()))
-        self.tasks.add(asyncio.create_task(self._py_stage_lin_q_strapper()))
+        self.tasks.add(asyncio.create_task(self._py_stagelinq_strapper()))
 
         if standalone:
             await self._wait_for_exit()
 
     async def _wait_for_exit(self):
-        while True:
+        while self.get_loop_condition():
             for task in self.tasks.copy():
                 if task.done():
-                    if task.exception():
+                    if task.exception() is not None:
                         raise task.exception()
                     return
             await asyncio.sleep(1)
@@ -243,15 +247,12 @@ class PyStageLinQ:
             task.cancel()
 
     async def _periodic_announcement(self):
-        while True:
+        while self.get_loop_condition():
             self._announce_self()
             await asyncio.sleep(0.5)
 
-    async def _py_stage_lin_q_strapper(self):
+    async def _py_stagelinq_strapper(self):
         return await self._discover_stagelinq_device(timeout=2)
 
     def stop(self):
-        self._stop()
-
-    def __del__(self):
         self._stop()

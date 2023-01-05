@@ -347,8 +347,8 @@ class StateMapSubscription:
     def __init__(
         self,
         service_handle: ServiceHandle,
-        data_callback: Callable[[list[DataClasses.StageLinQStateMapData]], None],
         subscription_list: dict,
+        data_callback: Callable[[list[DataClasses.StageLinQStateMapData]], None],
     ) -> None:
         self.service_handle: ServiceHandle = service_handle
         self._callback = data_callback
