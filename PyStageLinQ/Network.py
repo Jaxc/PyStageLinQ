@@ -5,9 +5,10 @@ This code is licensed under MIT license (see LICENSE for details)
 from __future__ import annotations
 import asyncio
 from . import EngineServices
+from .DataClasses import StageLinQServiceAnnouncementData, StageLinQReferenceData, StageLinQServiceRequestService
 from .MessageClasses import *
 from . import Token
-from typing import Callable
+from typing import Callable, Tuple, List, Any
 
 
 class StageLinQService:
@@ -39,6 +40,10 @@ class StageLinQService:
         self.services_available = False
 
         self.service_found_callback = service_found_callback
+
+        self.remaining_data = None
+
+        self.debug = []
 
     def get_services(self) -> list[EngineServices]:
         if self.services_available:
@@ -123,11 +128,15 @@ class StageLinQService:
             raise RuntimeError(
                 f"Remote socket for IP:{self.Ip} Port:{self.Port} closed!"
             )
-        frames = self.decode_multiframe(response)
+
+        if self.remaining_data is not None:
+            response = b''.join([self.remaining_data, response])
+        frames, self.remaining_data = self.decode_multiframe(response)
         if frames is None:
             # Something went wrong during decoding, lets throw away the frame and hope it doesn't happen again
             print(f"Error while decoding the frame")
             return False
+        self.last_frame = response
         return frames
 
     async def _handle_frames(self, frames: bytes) -> None:
@@ -142,7 +151,9 @@ class StageLinQService:
                 self._set_device_token(frame)
 
             elif type(frame) is StageLinQReferenceData:
-                asyncio.create_task(self.send_reference_message())
+                # Do not send a new frame if
+                if frame.OwnToken != self.OwnToken.get_token().to_bytes(16, "big"):
+                    asyncio.create_task(self.send_reference_message())
 
         if adding_services:
             await self._handle_new_services()
@@ -185,13 +196,9 @@ class StageLinQService:
     @staticmethod
     def decode_multiframe(
         frame: bytes,
-    ) -> list[
-        StageLinQServiceAnnouncementData
-        | StageLinQReferenceData
-        | StageLinQServiceRequestService
-    ]:
+    ) -> tuple[list[Any], None | bytes ] | None:
         subframes = []
-        while len(frame) > 4:
+        while len(frame) >= 4:
             match (int.from_bytes(frame[0:4], byteorder="big")):
                 case 0:
                     data = StageLinQServiceAnnouncement()
@@ -201,11 +208,16 @@ class StageLinQService:
                     data = StageLinQRequestServices()
                 case _:
                     # invalid data, return
-                    return
-            if data.decode_frame(frame) != PyStageLinQError.STAGELINQOK:
-                return None
+                    return None
+            decode_status = data.decode_frame(frame)
+
+            if decode_status != PyStageLinQError.STAGELINQOK:
+                if decode_status == PyStageLinQError.INVALIDLENGTH:
+                    return subframes, frame
+                else:
+                    return None
 
             subframes.append(data.get())
             frame = frame[data.get_len() :]
 
-        return subframes
+        return subframes, None
