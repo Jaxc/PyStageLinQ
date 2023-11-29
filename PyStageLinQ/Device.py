@@ -3,7 +3,6 @@ from . import Network
 
 
 class DeviceList:
-
     device_list: [DataClasses.StageLinQDiscoveryData]
 
     def __init__(self):

@@ -21,7 +21,6 @@ class StageLinQService_dummy:
 
 @pytest.fixture()
 def dummy_device(discovery_dummy, monkeypatch):
-
     monkeypatch.setattr(PyStageLinQ.Network, "StageLinQService", StageLinQService_dummy)
 
     return StageLinQService_dummy()
@@ -29,7 +28,6 @@ def dummy_device(discovery_dummy, monkeypatch):
 
 @pytest.fixture()
 def dummy_device_2(monkeypatch):
-
     monkeypatch.setattr(PyStageLinQ.Network, "StageLinQService", StageLinQService_dummy)
 
     return StageLinQService_dummy()
@@ -51,7 +49,6 @@ def discovery_data_dummy():
 
 @pytest.fixture()
 def discovery_dummy():
-
     return PyStageLinQ.MessageClasses.StageLinQDiscovery()
 
 
@@ -112,7 +109,6 @@ def test_find_registered_device_ok_main_interface(
 def test_find_registered_device_bad_device_name(
     DeviceList, dummy_device, port_dummy, discovery_data_dummy, monkeypatch
 ):
-
     dummy_device.Port = port_dummy
 
     DeviceList.device_list.append(dummy_device)
@@ -123,7 +119,6 @@ def test_find_registered_device_bad_device_name(
 def test_find_registered_device_bad_port(
     DeviceList, dummy_device, discovery_data_dummy, monkeypatch
 ):
-
     dummy_device.device_name = discovery_data_dummy.DeviceName
 
     DeviceList.device_list.append(dummy_device)
@@ -143,7 +138,6 @@ def test_find_registered_device_valid_input(
 
 
 def test_find_main_interface_no_entries(DeviceList, discovery_data_dummy):
-
     assert DeviceList.find_main_interface(discovery_data_dummy) is False
 
 
