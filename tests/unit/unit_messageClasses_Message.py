@@ -19,7 +19,6 @@ def test_init_values(stagelinq_message):
 
 
 def test_write_network_string(stagelinq_message):
-
     test_data = "hello"
 
     test_output = stagelinq_message.write_network_string(test_data)
@@ -29,14 +28,12 @@ def test_write_network_string(stagelinq_message):
 
 
 def test_read_network_string_incorrect_length(stagelinq_message):
-
     test_data = (20).to_bytes(4, byteorder="big") + "hello".encode(encoding="UTF-16be")
 
     assert stagelinq_message.read_network_string(test_data, 0) is None
 
 
 def test_read_network_string_valid_input(stagelinq_message):
-
     test_data = (
         (10).to_bytes(4, byteorder="big")
         + "hello".encode(encoding="UTF-16be")

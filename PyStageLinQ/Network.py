@@ -77,7 +77,6 @@ class StageLinQService:
             await asyncio.sleep(timestep)
 
     async def send_request_frame(self) -> None:
-
         out_data = StageLinQRequestServices()
         service_request_message = out_data.encode_frame(
             StageLinQServiceRequestService(Token=self.OwnToken)
