@@ -32,7 +32,7 @@ class PyStageLinQ:
     REQUESTSERVICEPORT = 0  # If set to anything but 0 other StageLinQ devices will try to request services at said port
     StageLinQ_discovery_port = 51337
 
-    ANNOUNCE_IP = "169.254.255.255"
+    ANNOUNCE_IP = "255.255.255.255"
 
     _loopcondition = True
 
@@ -236,6 +236,7 @@ class PyStageLinQ:
             for task in self.tasks.copy():
                 if task.done():
                     if task.exception() is not None:
+                        self.stop()
                         raise task.exception()
                     return
             await asyncio.sleep(1)
