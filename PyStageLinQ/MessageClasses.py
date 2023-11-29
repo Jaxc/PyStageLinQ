@@ -30,7 +30,6 @@ class StageLinQMessage:
         return ret
 
     def read_network_string(self, frame, start_offset):
-
         # Only uint32 length supported
         size_stop = start_offset + self.network_len_size
         data_start = size_stop
@@ -49,7 +48,6 @@ class StageLinQMessage:
 
 
 class StageLinQDiscovery(StageLinQMessage):
-
     token: StageLinQToken
     deviceName: str
     connectionType: str
@@ -58,7 +56,6 @@ class StageLinQDiscovery(StageLinQMessage):
     stagelinq_magic_flag = bytes("airD".encode(encoding="ASCII"))
 
     def __init__(self):
-
         self.Port = None
         self.sw_version = None
         self.sw_name = None
@@ -105,7 +102,6 @@ class StageLinQDiscovery(StageLinQMessage):
         )
 
     def decode_frame(self, frame):
-
         # Local Constants
         token_start = self.magic_flag_stop
         token_length = StageLinQToken.TOKENLENGTH
@@ -220,7 +216,6 @@ class StageLinQReference(StageLinQMessage):
         return request_frame
 
     def decode_frame(self, frame):
-
         if len(frame) < self.magic_flag_length:
             return PyStageLinQError.INVALIDFRAME
 

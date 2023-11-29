@@ -69,7 +69,6 @@ def test_set_token_invalid_input_value(token, monkeypatch):
 
 
 def test_validate_token_ok(token):
-
     token.generate_token()
     good_value = token.get_token()
 
@@ -79,7 +78,6 @@ def test_validate_token_ok(token):
 
 
 def test_validate_token_invalid_length(token):
-
     badValue = int("800000000000000000000000000000000", 17)
     badResult = token.validate_token(badValue)
 
@@ -87,7 +85,6 @@ def test_validate_token_invalid_length(token):
 
 
 def test_validate_token_invalid_value(token, monkeypatch):
-
     badValue = int("-1", 16)
     badResult = token.validate_token(badValue)
 

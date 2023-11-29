@@ -361,7 +361,6 @@ class StateMapSubscription:
         return self.state_map_task
 
     async def read_state_map(self) -> None:
-
         trailing_data = bytearray()
         while True:
             frame = await self.read_frame(trailing_data)
@@ -426,7 +425,6 @@ class StateMapSubscription:
 
     @staticmethod
     def verify_block(block: bytes) -> DataClasses.StageLinQStateMapData:
-
         if len(block) < 4:
             raise RuntimeError("Block is to short to contain length")
 

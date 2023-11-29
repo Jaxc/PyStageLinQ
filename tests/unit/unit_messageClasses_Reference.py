@@ -45,7 +45,6 @@ def test_init_values(stagelinq_reference):
 
 
 def test_encode_frame(stagelinq_reference, owntoken, devicetoken):
-
     test_data = PyStageLinQ.DataClasses.StageLinQReferenceData(
         owntoken, devicetoken, 313
     )
@@ -62,7 +61,6 @@ def test_encode_frame(stagelinq_reference, owntoken, devicetoken):
 
 
 def test_decode_frame_invalid_magic_flag_length(stagelinq_reference):
-
     assert (
         stagelinq_reference.decode_frame(random.randbytes(3))
         == PyStageLinQError.INVALIDFRAME
@@ -77,7 +75,6 @@ def test_decode_frame_invalid_frame_id(stagelinq_reference):
 
 
 def test_decode_frame_valid_input(stagelinq_reference, owntoken, devicetoken):
-
     dummy_frame = (
         PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQReferenceData
         + owntoken.get_token().to_bytes(16, byteorder="big")
@@ -97,7 +94,6 @@ def test_decode_frame_valid_input(stagelinq_reference, owntoken, devicetoken):
 
 
 def test_verify_get_data(stagelinq_reference, owntoken, devicetoken):
-
     stagelinq_reference.OwnToken = owntoken.get_token().to_bytes(16, byteorder="big")
     stagelinq_reference.DeviceToken = devicetoken.get_token().to_bytes(
         16, byteorder="big"

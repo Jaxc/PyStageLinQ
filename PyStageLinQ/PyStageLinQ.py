@@ -112,7 +112,6 @@ class PyStageLinQ:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as discovery_socket:
             discovery_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             try:
-
                 discovery_socket.sendto(
                     discovery_frame, (self.ANNOUNCE_IP, self.StageLinQ_discovery_port)
                 )
@@ -217,7 +216,6 @@ class PyStageLinQ:
     async def _subscribe_to_statemap(
         self, state_map_service, subscription_list, data_available_callback
     ):
-
         state_map = EngineServices.StateMapSubscription(
             state_map_service, subscription_list, data_available_callback
         )
