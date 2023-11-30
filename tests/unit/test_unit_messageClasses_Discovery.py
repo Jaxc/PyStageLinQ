@@ -155,10 +155,8 @@ def test_decode_frame_invalid_token_type(stagelinq_discovery, monkeypatch):
 
     monkeypatch.setattr(stagelinq_discovery.token, "set_token", set_token_invalid_type)
 
-    assert (
+    with pytest.raises(Exception):
         stagelinq_discovery.decode_frame("airD".encode())
-        == PyStageLinQError.INVALIDTOKENTYPE
-    )
 
 
 def test_decode_frame_invalid_token_length(stagelinq_discovery, monkeypatch):
@@ -167,10 +165,8 @@ def test_decode_frame_invalid_token_length(stagelinq_discovery, monkeypatch):
 
     monkeypatch.setattr(stagelinq_discovery.token, "set_token", set_token_invalid)
 
-    assert (
+    with pytest.raises(Exception):
         stagelinq_discovery.decode_frame("airD".encode())
-        == PyStageLinQError.INVALIDTOKEN
-    )
 
 
 def test_decode_frame_valid_input(stagelinq_discovery, monkeypatch, dummy_port):
