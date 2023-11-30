@@ -39,19 +39,17 @@ class StageLinQToken:
     def get_token(self) -> int:
         return self.token
 
-    def set_token(self, token: int) -> PyStageLinQError:
+    def set_token(self, token: int) -> None:
         if type(token) == int:
             if self.validate_token(token) == PyStageLinQError.STAGELINQOK:
                 self.token = token
-                ret = PyStageLinQError.STAGELINQOK
             else:
                 # Token could not be Validated
-                ret = PyStageLinQError.INVALIDTOKEN
+                raise PyStageLinQError.INVALIDTOKEN
         else:
             # Token is not of type int
-            ret = PyStageLinQError.INVALIDTOKENTYPE
+            raise PyStageLinQError.INVALIDTOKENTYPE
 
-        return ret
 
     @staticmethod
     def validate_token(token: int) -> PyStageLinQError:
