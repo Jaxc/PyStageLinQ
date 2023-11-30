@@ -137,8 +137,12 @@ class StageLinQDiscovery(StageLinQMessage):
                 frame, connection_type_start
             )
 
-            sw_version_start, self.sw_name = self.read_network_string(frame, sw_name_start)
-            port_start, self.sw_version = self.read_network_string(frame, sw_version_start)
+            sw_version_start, self.sw_name = self.read_network_string(
+                frame, sw_name_start
+            )
+            port_start, self.sw_version = self.read_network_string(
+                frame, sw_version_start
+            )
 
         except PyStageLinQError.INVALIDLENGTH:
             return PyStageLinQError.INVALIDLENGTH
@@ -194,10 +198,14 @@ class StageLinQServiceAnnouncement(StageLinQMessage):
         token_stop = token_start + StageLinQToken.TOKENLENGTH
         service_name_start = token_stop
 
-        self.Token.set_token((0).from_bytes(frame[token_start:token_stop], byteorder="big"))
+        self.Token.set_token(
+            (0).from_bytes(frame[token_start:token_stop], byteorder="big")
+        )
 
         try:
-            port_start, self.Service = self.read_network_string(frame, service_name_start)
+            port_start, self.Service = self.read_network_string(
+                frame, service_name_start
+            )
         except PyStageLinQError.INVALIDLENGTH:
             return PyStageLinQError.INVALIDLENGTH
 
@@ -235,9 +243,7 @@ class StageLinQReference(StageLinQMessage):
         request_frame += reference_data.OwnToken.get_token().to_bytes(
             StageLinQToken.TOKENLENGTH, byteorder="big"
         )
-        request_frame += 0x00.to_bytes(
-            StageLinQToken.TOKENLENGTH, byteorder="big"
-        )
+        request_frame += 0x00.to_bytes(StageLinQToken.TOKENLENGTH, byteorder="big")
         request_frame += reference_data.Reference.to_bytes(8, byteorder="big")
         return request_frame
 
@@ -259,9 +265,13 @@ class StageLinQReference(StageLinQMessage):
         reference_start = device_token_stop
         reference_stop = reference_start + self.reference_len
 
-        self.OwnToken.set_token((0).from_bytes(frame[own_token_start:own_token_stop], byteorder="big"))
+        self.OwnToken.set_token(
+            (0).from_bytes(frame[own_token_start:own_token_stop], byteorder="big")
+        )
 
-        self.DeviceToken.set_token((0).from_bytes(frame[device_token_start:device_token_stop], byteorder="big"))
+        self.DeviceToken.set_token(
+            (0).from_bytes(frame[device_token_start:device_token_stop], byteorder="big")
+        )
         self.Reference = int.from_bytes(
             frame[reference_start:reference_stop], byteorder="big"
         )

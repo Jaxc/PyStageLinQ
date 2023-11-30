@@ -25,7 +25,9 @@ def stagelinq_service_announcement():
 
 
 def test_init_values(stagelinq_service_announcement):
-    assert type(stagelinq_service_announcement.Token) is PyStageLinQ.Token.StageLinQToken
+    assert (
+        type(stagelinq_service_announcement.Token) is PyStageLinQ.Token.StageLinQToken
+    )
     assert stagelinq_service_announcement.Service is None
     assert stagelinq_service_announcement.Port is None
     assert stagelinq_service_announcement.length is None
@@ -74,7 +76,7 @@ def test_decode_frame_invalid_length(stagelinq_service_announcement):
 
 def test_decode_frame_invalid_frame_id(stagelinq_service_announcement):
     assert (
-        stagelinq_service_announcement.decode_frame(("airJ"*20).encode())
+        stagelinq_service_announcement.decode_frame(("airJ" * 20).encode())
         == PyStageLinQError.INVALIDFRAME
     )
 
