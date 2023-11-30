@@ -63,6 +63,9 @@ class StageLinQDiscovery(StageLinQMessage):
         self.connection_type = None
         self.token = StageLinQToken()
         self.length = 0
+        self.min_length = (
+            self.magic_flag_length + StageLinQToken.TOKENLENGTH + self.network_len_size
+        )
 
     def encode_frame(self, discovery_data: StageLinQDiscoveryData) -> bytes:
         if self.verify_discovery_data(discovery_data) != PyStageLinQError.STAGELINQOK:
@@ -121,12 +124,9 @@ class StageLinQDiscovery(StageLinQMessage):
         ):
             return PyStageLinQError.MAGICFLAGNOTFOUND
 
-        token_valid = self.token.set_token(
+        self.token.set_token(
             int.from_bytes(frame[token_start:token_stop], byteorder="big")
         )
-
-        if token_valid != PyStageLinQError.STAGELINQOK:
-            return token_valid
 
         try:
             connection_type_start, self.device_name = self.read_network_string(
