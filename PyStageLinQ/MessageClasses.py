@@ -159,7 +159,7 @@ class StageLinQServiceAnnouncement(StageLinQMessage):
     Port: int | type(None)
 
     def __init__(self):
-        self.Token = None
+        self.Token = StageLinQToken()
         self.Service = None
         self.Port = None
         self.length = None
@@ -194,7 +194,7 @@ class StageLinQServiceAnnouncement(StageLinQMessage):
         token_stop = token_start + StageLinQToken.TOKENLENGTH
         service_name_start = token_stop
 
-        self.Token = frame[token_start:token_stop]
+        self.Token.set_token((0).from_bytes(frame[token_start:token_stop], byteorder="big"))
 
         try:
             port_start, self.Service = self.read_network_string(frame, service_name_start)
@@ -222,8 +222,8 @@ class StageLinQReference(StageLinQMessage):
     Reference: int | type(None)
 
     def __init__(self):
-        self.OwnToken = None
-        self.DeviceToken = None
+        self.OwnToken = StageLinQToken()
+        self.DeviceToken = StageLinQToken()
         self.Reference = None
         self.length = (
             self.magic_flag_length + StageLinQToken.TOKENLENGTH * 2 + self.reference_len
@@ -259,8 +259,9 @@ class StageLinQReference(StageLinQMessage):
         reference_start = device_token_stop
         reference_stop = reference_start + self.reference_len
 
-        self.OwnToken = frame[own_token_start:own_token_stop]
-        self.DeviceToken = frame[device_token_start:device_token_stop]
+        self.OwnToken.set_token((0).from_bytes(frame[own_token_start:own_token_stop], byteorder="big"))
+
+        self.DeviceToken.set_token((0).from_bytes(frame[device_token_start:device_token_stop], byteorder="big"))
         self.Reference = int.from_bytes(
             frame[reference_start:reference_stop], byteorder="big"
         )
