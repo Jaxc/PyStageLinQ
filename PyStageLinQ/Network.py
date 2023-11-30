@@ -5,7 +5,11 @@ This code is licensed under MIT license (see LICENSE for details)
 from __future__ import annotations
 import asyncio
 from . import EngineServices
-from .DataClasses import StageLinQServiceAnnouncementData, StageLinQReferenceData, StageLinQServiceRequestService
+from .DataClasses import (
+    StageLinQServiceAnnouncementData,
+    StageLinQReferenceData,
+    StageLinQServiceRequestService,
+)
 from .MessageClasses import *
 from . import Token
 from typing import Callable, Tuple, List, Any
@@ -130,7 +134,7 @@ class StageLinQService:
             )
 
         if self.remaining_data is not None:
-            response = b''.join([self.remaining_data, response])
+            response = b"".join([self.remaining_data, response])
         frames, self.remaining_data = self.decode_multiframe(response)
         if frames is None:
             # Something went wrong during decoding, lets throw away the frame and hope it doesn't happen again
@@ -196,7 +200,7 @@ class StageLinQService:
     @staticmethod
     def decode_multiframe(
         frame: bytes,
-    ) -> tuple[list[Any], None | bytes ] | None:
+    ) -> tuple[list[Any], None | bytes] | None:
         subframes = []
         while len(frame) >= 4:
             match (int.from_bytes(frame[0:4], byteorder="big")):

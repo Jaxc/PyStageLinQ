@@ -69,7 +69,7 @@ def test_decode_frame_invalid_magic_flag_length(stagelinq_reference):
 
 def test_decode_frame_invalid_frame_id(stagelinq_reference):
     assert (
-        stagelinq_reference.decode_frame(("airJ"*20).encode())
+        stagelinq_reference.decode_frame(("airJ" * 20).encode())
         == PyStageLinQError.INVALIDFRAME
     )
 

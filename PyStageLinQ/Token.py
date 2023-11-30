@@ -50,7 +50,6 @@ class StageLinQToken:
             # Token is not of type int
             raise PyStageLinQError.INVALIDTOKENTYPE
 
-
     @staticmethod
     def validate_token(token: int) -> PyStageLinQError:
         # The token is validated by converting it to a 16 byte array and then back to an int. If the value is the same
