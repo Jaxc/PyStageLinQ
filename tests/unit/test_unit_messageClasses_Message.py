@@ -30,7 +30,8 @@ def test_write_network_string(stagelinq_message):
 def test_read_network_string_incorrect_length(stagelinq_message):
     test_data = (20).to_bytes(4, byteorder="big") + "hello".encode(encoding="UTF-16be")
 
-    assert stagelinq_message.read_network_string(test_data, 0) is None
+    with pytest.raises(Exception):
+        stagelinq_message.read_network_string(test_data, 0)
 
 
 def test_read_network_string_valid_input(stagelinq_message):

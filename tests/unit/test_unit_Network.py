@@ -293,7 +293,7 @@ async def test_receive_frames_no_frames(dummy_stagelinq_service, monkeypatch):
     reader_dummy = reader()
     dummy_stagelinq_service.reader = reader_dummy
 
-    decode_multiframe_mock = Mock(side_effect=[None])
+    decode_multiframe_mock = Mock(side_effect=[[None, None]])
     monkeypatch.setattr(
         dummy_stagelinq_service, "decode_multiframe", decode_multiframe_mock
     )
@@ -313,7 +313,7 @@ async def test_receive_frames_valid_data(dummy_stagelinq_service, monkeypatch):
     reader_dummy = reader()
     dummy_stagelinq_service.reader = reader_dummy
 
-    decode_multiframe_mock = Mock(side_effect=[frames_data])
+    decode_multiframe_mock = Mock(side_effect=[[frames_data, None]])
     monkeypatch.setattr(
         dummy_stagelinq_service, "decode_multiframe", decode_multiframe_mock
     )
@@ -586,11 +586,11 @@ async def test_send_refence_message(dummy_stagelinq_service, monkeypatch, token_
 
 
 def test_decode_multiframe_no_frame(dummy_stagelinq_service):
-    assert dummy_stagelinq_service.decode_multiframe(bytes()) == []
+    assert dummy_stagelinq_service.decode_multiframe(bytes()) == ([], None)
 
 
 def test_decode_multiframe_short_frame(dummy_stagelinq_service):
-    assert dummy_stagelinq_service.decode_multiframe(b"1234") == []
+    assert dummy_stagelinq_service.decode_multiframe(b"0000") == None
 
 
 def test_decode_multiframe_service_announcement(dummy_stagelinq_service, monkeypatch):
@@ -612,7 +612,7 @@ def test_decode_multiframe_service_announcement(dummy_stagelinq_service, monkeyp
         PyStageLinQ.Network, "StageLinQServiceAnnouncement", service_announcement_dummy
     )
 
-    assert dummy_stagelinq_service.decode_multiframe(service) == [frame_data]
+    assert dummy_stagelinq_service.decode_multiframe(service) == ([frame_data], None)
 
     service_announcement_mock.decode_frame.assert_called_once_with(service)
     service_announcement_mock.get.assert_called_once()
@@ -637,7 +637,7 @@ def test_decode_multiframe_reference(dummy_stagelinq_service, monkeypatch):
         PyStageLinQ.Network, "StageLinQReference", service_announcement_dummy
     )
 
-    assert dummy_stagelinq_service.decode_multiframe(service) == [frame_data]
+    assert dummy_stagelinq_service.decode_multiframe(service) == ([frame_data], None)
 
     service_announcement_mock.decode_frame.assert_called_once_with(service)
     service_announcement_mock.get.assert_called_once()
@@ -663,7 +663,7 @@ def test_decode_multiframe_request_service(dummy_stagelinq_service, monkeypatch)
         PyStageLinQ.Network, "StageLinQRequestServices", service_announcement_dummy
     )
 
-    assert dummy_stagelinq_service.decode_multiframe(service) == [frame_data]
+    assert dummy_stagelinq_service.decode_multiframe(service) == ([frame_data], None)
 
     service_announcement_mock.decode_frame.assert_called_once_with(service)
     service_announcement_mock.get.assert_called_once()
