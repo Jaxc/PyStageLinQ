@@ -32,8 +32,8 @@ def stagelinq_reference():
 
 
 def test_init_values(stagelinq_reference):
-    assert stagelinq_reference.OwnToken is None
-    assert stagelinq_reference.DeviceToken is None
+    assert type(stagelinq_reference.OwnToken) is PyStageLinQ.Token.StageLinQToken
+    assert type(stagelinq_reference.DeviceToken) is PyStageLinQ.Token.StageLinQToken
     assert stagelinq_reference.Reference is None
     assert stagelinq_reference.length == 44
     assert stagelinq_reference.port_length == 2
@@ -56,20 +56,20 @@ def test_encode_frame(stagelinq_reference, owntoken, devicetoken):
         == test_output[0:4]
     )
     assert owntoken.get_token().to_bytes(16, byteorder="big") == test_output[4:20]
-    assert devicetoken.get_token().to_bytes(16, byteorder="big") == test_output[20:36]
+    assert (0).to_bytes(16, byteorder="big") == test_output[20:36]
     assert (313).to_bytes(8, byteorder="big") == test_output[36:44]
 
 
 def test_decode_frame_invalid_magic_flag_length(stagelinq_reference):
     assert (
         stagelinq_reference.decode_frame(random.randbytes(3))
-        == PyStageLinQError.INVALIDFRAME
+        == PyStageLinQError.INVALIDLENGTH
     )
 
 
 def test_decode_frame_invalid_frame_id(stagelinq_reference):
     assert (
-        stagelinq_reference.decode_frame("airJ".encode())
+        stagelinq_reference.decode_frame(("airJ"*20).encode())
         == PyStageLinQError.INVALIDFRAME
     )
 
@@ -84,12 +84,8 @@ def test_decode_frame_valid_input(stagelinq_reference, owntoken, devicetoken):
 
     assert stagelinq_reference.decode_frame(dummy_frame) == PyStageLinQError.STAGELINQOK
 
-    assert stagelinq_reference.OwnToken == owntoken.get_token().to_bytes(
-        16, byteorder="big"
-    )
-    assert stagelinq_reference.DeviceToken == devicetoken.get_token().to_bytes(
-        16, byteorder="big"
-    )
+    assert stagelinq_reference.OwnToken.get_token() == owntoken.get_token()
+    assert stagelinq_reference.DeviceToken.get_token() == devicetoken.get_token()
     assert stagelinq_reference.Reference == 313
 
 

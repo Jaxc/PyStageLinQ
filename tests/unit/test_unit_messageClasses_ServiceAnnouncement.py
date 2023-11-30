@@ -25,7 +25,7 @@ def stagelinq_service_announcement():
 
 
 def test_init_values(stagelinq_service_announcement):
-    assert stagelinq_service_announcement.Token is None
+    assert type(stagelinq_service_announcement.Token) is PyStageLinQ.Token.StageLinQToken
     assert stagelinq_service_announcement.Service is None
     assert stagelinq_service_announcement.Port is None
     assert stagelinq_service_announcement.length is None
@@ -65,16 +65,16 @@ def test_encode_frame_valid_input(
     assert dummy_port.to_bytes(2, byteorder="big") == test_output[31:33]
 
 
-def test_decode_frame_invalid_magic_flag_length(stagelinq_service_announcement):
+def test_decode_frame_invalid_length(stagelinq_service_announcement):
     assert (
         stagelinq_service_announcement.decode_frame(random.randbytes(3))
-        == PyStageLinQError.INVALIDFRAME
+        == PyStageLinQError.INVALIDLENGTH
     )
 
 
 def test_decode_frame_invalid_frame_id(stagelinq_service_announcement):
     assert (
-        stagelinq_service_announcement.decode_frame("airJ".encode())
+        stagelinq_service_announcement.decode_frame(("airJ"*20).encode())
         == PyStageLinQError.INVALIDFRAME
     )
 
@@ -104,9 +104,7 @@ def test_decode_frame_valid_input(
         == PyStageLinQError.STAGELINQOK
     )
 
-    assert stagelinq_service_announcement.Token == dummy_token.get_token().to_bytes(
-        16, byteorder="big"
-    )
+    assert stagelinq_service_announcement.Token.get_token() == dummy_token.get_token()
     assert stagelinq_service_announcement.Port.to_bytes(
         2, byteorder="big"
     ) == dummy_port.to_bytes(2, byteorder="big")

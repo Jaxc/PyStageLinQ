@@ -43,10 +43,10 @@ def test_encode_frame(stagelinq_request_services, dummy_token):
     assert dummy_token.get_token().to_bytes(16, byteorder="big") == test_output[4:20]
 
 
-def test_decode_frame_invalid_magic_flag_length(stagelinq_request_services):
+def test_decode_frame_invalid_length(stagelinq_request_services):
     assert (
         stagelinq_request_services.decode_frame(random.randbytes(3))
-        == PyStageLinQError.INVALIDFRAME
+        == PyStageLinQError.INVALIDLENGTH
     )
 
 

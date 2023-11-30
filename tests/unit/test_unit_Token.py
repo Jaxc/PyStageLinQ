@@ -46,7 +46,8 @@ def test_generate_token_msb1(token, monkeypatch):
 def test_set_token_wrong_input_type(token):
     # test type
     testValue = None
-    assert token.set_token(testValue) == PyStageLinQError.INVALIDTOKENTYPE
+    with pytest.raises(Exception):
+        token.set_token(testValue)
 
 
 def test_set_token_valid_input(token, monkeypatch):
@@ -55,7 +56,7 @@ def test_set_token_valid_input(token, monkeypatch):
 
     monkeypatch.setattr(token, "validate_token", ret_ok)
     testValue = 0
-    assert token.set_token(testValue) == PyStageLinQError.STAGELINQOK
+    token.set_token(testValue)
     assert token.get_token() == testValue
 
 
@@ -65,7 +66,8 @@ def test_set_token_invalid_input_value(token, monkeypatch):
 
     testValue = 0
     monkeypatch.setattr(token, "validate_token", ret_nok)
-    assert token.set_token(testValue) == PyStageLinQError.INVALIDTOKEN
+    with pytest.raises(Exception):
+        assert token.set_token(testValue)
 
 
 def test_validate_token_ok(token):
