@@ -2,6 +2,7 @@
 (c) 2022 Jaxcie
 This code is licensed under MIT license (see LICENSE for details)
 """
+
 from __future__ import annotations
 import asyncio
 from . import EngineServices
@@ -121,11 +122,14 @@ class StageLinQService:
 
     async def _receive_frames(
         self,
-    ) -> bool | list[
-        StageLinQServiceAnnouncementData
-        | StageLinQReferenceData
-        | StageLinQServiceRequestService
-    ]:
+    ) -> (
+        bool
+        | list[
+            StageLinQServiceAnnouncementData
+            | StageLinQReferenceData
+            | StageLinQServiceRequestService
+        ]
+    ):
         response = await self.reader.read(1024)
         if len(response) == 0:
             # Socket closed
