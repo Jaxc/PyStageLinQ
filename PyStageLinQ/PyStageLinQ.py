@@ -28,12 +28,14 @@ class PyStageLinQ:
     :param name: This is the name which PyStageLinQ will announce itself with on the StageLinQ protocol. If not
     set it defaults to "Hello StageLinQ World".
 
+    :param ip: This is the ip of the interface you want to bind the sockets to, e.g. your local ethernet IP.
+
+    :param announce_ip: The IP to send StageLinQ announcements to, 255.255.255.255 will send to every network.
+
     """
 
     REQUESTSERVICEPORT = 0  # If set to anything but 0 other StageLinQ devices will try to request services at said port
     StageLinQ_discovery_port = 51337
-
-    ANNOUNCE_IP = "255.255.255.255"
 
     _loopcondition = True
 
@@ -44,6 +46,7 @@ class PyStageLinQ:
         ],
         name: str = "Hello StageLinQ World",
         ip="169.254.13.37",
+        announce_ip="255.255.255.255",
     ):
         self.name = name
         self.OwnToken = StageLinQToken()
@@ -72,6 +75,8 @@ class PyStageLinQ:
         self.devices_with_services_lock = asyncio.Lock()
 
         self.new_device_found_callback = new_device_found_callback
+
+        self.announce_ip = announce_ip
 
     def start_standalone(self):
         """
@@ -114,11 +119,11 @@ class PyStageLinQ:
             discovery_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             try:
                 discovery_socket.sendto(
-                    discovery_frame, (self.ANNOUNCE_IP, self.StageLinQ_discovery_port)
+                    discovery_frame, (self.announce_ip, self.StageLinQ_discovery_port)
                 )
             except PermissionError:
                 raise PermissionError(
-                    f"Cannot write to IP {self.ANNOUNCE_IP}, "
+                    f"Cannot write to IP {self.announce_ip}, "
                     f"this error could be due to that there is no network interface set up with this IP range"
                 )
 
