@@ -140,7 +140,7 @@ def test_send_discovery_frame(dummy_pystagelinq, monkeypatch):
     )
     discovery_socket.return_value.__enter__.return_value.sendto.assert_called_once_with(
         dummy_discovery_frame,
-        (dummy_pystagelinq.ANNOUNCE_IP, dummy_pystagelinq.StageLinQ_discovery_port),
+        (dummy_pystagelinq.announce_ip, dummy_pystagelinq.StageLinQ_discovery_port),
     )
 
 
@@ -167,7 +167,7 @@ def test_send_discovery_frame_permission_error(dummy_pystagelinq, monkeypatch):
 
     assert (
         exception.value.args[0]
-        == f"Cannot write to IP {dummy_pystagelinq.ANNOUNCE_IP}, this error could be due to that there is no network "
+        == f"Cannot write to IP {dummy_pystagelinq.announce_ip}, this error could be due to that there is no network "
         f"interface set up with this IP range"
     )
 
