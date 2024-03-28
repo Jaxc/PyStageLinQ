@@ -269,9 +269,12 @@ class StageLinQReference(StageLinQMessage):
             (0).from_bytes(frame[own_token_start:own_token_stop], byteorder="big")
         )
 
-        self.DeviceToken.set_token(
-            (0).from_bytes(frame[device_token_start:device_token_stop], byteorder="big")
+        token_id = (0).from_bytes(
+            frame[device_token_start:device_token_stop], byteorder="big"
         )
+
+        if token_id != 0:
+            self.DeviceToken.set_token(token_id)
         self.Reference = int.from_bytes(
             frame[reference_start:reference_stop], byteorder="big"
         )

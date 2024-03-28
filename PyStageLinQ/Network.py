@@ -159,8 +159,8 @@ class StageLinQService:
                 self._set_device_token(frame)
 
             elif type(frame) is StageLinQReferenceData:
-                # Do not send a new frame if
-                if frame.OwnToken != self.OwnToken.get_token().to_bytes(16, "big"):
+                # Do not send a new frame if read frame is from ourselves.
+                if frame.OwnToken.get_token() != self.OwnToken.get_token():
                     asyncio.create_task(self.send_reference_message())
 
         if adding_services:

@@ -74,6 +74,21 @@ def test_decode_frame_invalid_frame_id(stagelinq_reference):
     )
 
 
+def test_decode_frame_invalid_token_id(stagelinq_reference, owntoken, devicetoken):
+    dummy_frame = (
+        PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQReferenceData
+        + owntoken.get_token().to_bytes(16, byteorder="big")
+        + (0).to_bytes(16, byteorder="big")
+        + (313).to_bytes(8, byteorder="big")
+    )
+
+    assert stagelinq_reference.decode_frame(dummy_frame) == PyStageLinQError.STAGELINQOK
+
+    assert stagelinq_reference.OwnToken.get_token() == owntoken.get_token()
+    assert stagelinq_reference.DeviceToken.get_token() == 0
+    assert stagelinq_reference.Reference == 313
+
+
 def test_decode_frame_valid_input(stagelinq_reference, owntoken, devicetoken):
     dummy_frame = (
         PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQReferenceData

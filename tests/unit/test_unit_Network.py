@@ -373,7 +373,7 @@ async def test_handle_frames_request_service(
 
 
 @pytest.mark.asyncio
-async def test_handle_frames_reference(
+async def test_handle_frames_reference_own_frame(
     dummy_stagelinq_service, token_dummy, monkeypatch
 ):
     handle_new_services_mock = AsyncMock()
@@ -394,6 +394,41 @@ async def test_handle_frames_reference(
 
     test_frame = PyStageLinQ.DataClasses.StageLinQReferenceData(
         token_dummy, token_dummy, 12345
+    )
+    await dummy_stagelinq_service._handle_frames([test_frame])
+
+    assert dummy_stagelinq_service.service_list == []
+
+    assert set_device_token_mock.call_count == 0
+    assert handle_new_services_mock.call_count == 0
+    create_task_mock.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_handle_frames_reference_other_frame(
+    dummy_stagelinq_service, token_dummy, monkeypatch
+):
+    handle_new_services_mock = AsyncMock()
+    set_device_token_mock = Mock()
+    create_task_mock = Mock()
+    send_reference_message_mock = Mock()
+
+    other_token = PyStageLinQ.Network.Token.StageLinQToken()
+    other_token.generate_token()
+
+    monkeypatch.setattr(PyStageLinQ.Network.asyncio, "create_task", create_task_mock)
+    monkeypatch.setattr(
+        dummy_stagelinq_service, "_set_device_token", set_device_token_mock
+    )
+    monkeypatch.setattr(
+        dummy_stagelinq_service, "_handle_new_services", handle_new_services_mock
+    )
+    monkeypatch.setattr(
+        dummy_stagelinq_service, "send_reference_message", send_reference_message_mock
+    )
+
+    test_frame = PyStageLinQ.DataClasses.StageLinQReferenceData(
+        other_token, token_dummy, 12345
     )
     await dummy_stagelinq_service._handle_frames([test_frame])
 
