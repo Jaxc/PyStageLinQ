@@ -41,7 +41,7 @@ def test_init_values(dummy_pystagelinq, dummy_ip):
     assert (
         type(dummy_pystagelinq.device_list) is PyStageLinQ.PyStageLinQ.Device.DeviceList
     )
-    assert dummy_pystagelinq.ip == dummy_ip
+    assert dummy_pystagelinq.ip == [dummy_ip]
 
     assert dummy_pystagelinq.tasks == set()
 
@@ -58,6 +58,17 @@ def test_init_values(dummy_pystagelinq, dummy_ip):
     )
 
     assert dummy_pystagelinq.new_device_found_callback is None
+
+
+def test_init_values_ip_none(monkeypatch):
+    dummy_ips = [[["1,2,3,4"]], [["5.6.7.8"]]]
+    socket = MagicMock()
+    socket.getaddrinfo.return_value = dummy_ips
+    monkeypatch.setattr(PyStageLinQ.PyStageLinQ, "socket", socket)
+
+    dummy_pystagelinq = PyStageLinQ.PyStageLinQ.PyStageLinQ(None, ip=None)
+
+    assert dummy_pystagelinq.ip == [dummy_ips[0][0][0], dummy_ips[1][0][0]]
 
 
 def test_start_standalone(dummy_pystagelinq, monkeypatch):
@@ -129,6 +140,7 @@ def test_send_discovery_frame(dummy_pystagelinq, monkeypatch):
     discovery_socket = MagicMock()
 
     socket.socket.side_effect = discovery_socket
+    socket.getaddrinfo.side_effect = [[["255.255.255.255"]]]
 
     monkeypatch.setattr(PyStageLinQ.PyStageLinQ, "socket", socket)
 
@@ -140,15 +152,18 @@ def test_send_discovery_frame(dummy_pystagelinq, monkeypatch):
     )
     discovery_socket.return_value.__enter__.return_value.sendto.assert_called_once_with(
         dummy_discovery_frame,
-        (dummy_pystagelinq.announce_ip, dummy_pystagelinq.StageLinQ_discovery_port),
+        ("255.255.255.255", dummy_pystagelinq.StageLinQ_discovery_port),
     )
 
 
-def test_send_discovery_frame_permission_error(dummy_pystagelinq, monkeypatch):
+def test_send_discovery_frame_permission_error(
+    dummy_pystagelinq, monkeypatch, dummy_ip
+):
     dummy_discovery_frame = "AAAA"
 
     socket = MagicMock()
     discovery_socket = MagicMock()
+    socket.getaddrinfo.side_effect = [[["255.255.255.255"]]]
 
     socket.socket.side_effect = discovery_socket
     discovery_socket.return_value.__enter__.return_value.sendto.side_effect = (
@@ -167,20 +182,22 @@ def test_send_discovery_frame_permission_error(dummy_pystagelinq, monkeypatch):
 
     assert (
         exception.value.args[0]
-        == f"Cannot write to IP {dummy_pystagelinq.announce_ip}, this error could be due to that there is no network "
+        == f"Cannot send message on interface {dummy_ip}, this error could be due to that there is no network "
         f"interface set up with this IP range"
     )
 
 
 @pytest.mark.asyncio
-async def test_discover_stagelinq_device_bind_error(dummy_pystagelinq, monkeypatch):
+async def test_discover_stagelinq_device_bind_error(
+    dummy_pystagelinq, monkeypatch, dummy_ip
+):
     socket = MagicMock()
     monkeypatch.setattr(PyStageLinQ.PyStageLinQ, "socket", socket)
 
     socket.socket.return_value.bind.side_effect = Exception()
 
     assert (
-        await dummy_pystagelinq._discover_stagelinq_device()
+        await dummy_pystagelinq._discover_stagelinq_device(dummy_ip)
         == PyStageLinQError.CANNOTBINDSOCKET
     )
 
@@ -194,7 +211,9 @@ def test_get_loop_condition(dummy_pystagelinq):
 
 
 @pytest.mark.asyncio
-async def test_discover_stagelinq_check_initialization(dummy_pystagelinq, monkeypatch):
+async def test_discover_stagelinq_check_initialization(
+    dummy_pystagelinq, monkeypatch, dummy_ip
+):
     socket = MagicMock()
     monkeypatch.setattr(PyStageLinQ.PyStageLinQ, "socket", socket)
 
@@ -203,16 +222,16 @@ async def test_discover_stagelinq_check_initialization(dummy_pystagelinq, monkey
         dummy_pystagelinq, "get_loop_condition", get_loop_condition_mock
     )
 
-    await dummy_pystagelinq._discover_stagelinq_device()
+    await dummy_pystagelinq._discover_stagelinq_device(dummy_ip)
     socket.socket.assert_called_once_with(socket.AF_INET, socket.SOCK_DGRAM)
     socket.socket.return_value.bind.assert_called_once_with(
-        (dummy_pystagelinq.ip, dummy_pystagelinq.StageLinQ_discovery_port)
+        (dummy_pystagelinq.ip[0], dummy_pystagelinq.StageLinQ_discovery_port)
     )
     socket.socket.return_value.setblocking.assert_called_once_with(False)
 
 
 @pytest.mark.asyncio
-async def test_discover_stagelinq_timeout(dummy_pystagelinq, monkeypatch):
+async def test_discover_stagelinq_timeout(dummy_pystagelinq, monkeypatch, dummy_ip):
     socket = MagicMock()
     monkeypatch.setattr(PyStageLinQ.PyStageLinQ, "socket", socket)
 
@@ -235,7 +254,7 @@ async def test_discover_stagelinq_timeout(dummy_pystagelinq, monkeypatch):
     select_mock.select.side_effect = [[False]]
 
     assert (
-        await dummy_pystagelinq._discover_stagelinq_device()
+        await dummy_pystagelinq._discover_stagelinq_device(dummy_ip)
         == PyStageLinQError.DISCOVERYTIMEOUT
     )
 
@@ -270,7 +289,7 @@ async def test_discover_stagelinq_bad_frame(dummy_pystagelinq, monkeypatch, dumm
     socket.socket.return_value.recvfrom.side_effect = [[None, [dummy_ip, dummy_port]]]
     decode_frame_mock.side_effect = [PyStageLinQError.INVALIDFRAME]
 
-    assert await dummy_pystagelinq._discover_stagelinq_device() is None
+    assert await dummy_pystagelinq._discover_stagelinq_device(dummy_ip) is None
 
     sleep_mock.assert_called_once_with(0.1)
     select_mock.select.assert_called_once_with([socket.socket.return_value], [], [], 0)
@@ -309,7 +328,7 @@ async def test_discover_stagelinq_bad_port(dummy_pystagelinq, monkeypatch, dummy
     socket.socket.return_value.recvfrom.side_effect = [[None, [dummy_ip, 0]]]
     time_mock.time.side_effect = [0, 5, 11]
 
-    assert await dummy_pystagelinq._discover_stagelinq_device() is None
+    assert await dummy_pystagelinq._discover_stagelinq_device(dummy_ip) is None
 
     assert time_mock.time.call_count == 2
 
@@ -347,7 +366,7 @@ async def test_discover_stagelinq_self_name(dummy_pystagelinq, monkeypatch, dumm
     socket.socket.return_value.recvfrom.side_effect = [[None, [dummy_ip, 0]]]
     time_mock.time.side_effect = [0, 5, 11]
 
-    assert await dummy_pystagelinq._discover_stagelinq_device() is None
+    assert await dummy_pystagelinq._discover_stagelinq_device(dummy_ip) is None
 
     assert time_mock.time.call_count == 2
 
@@ -390,7 +409,7 @@ async def test_discover_stagelinq_device_registered(
     dummy_pystagelinq.device_list = MagicMock()
     dummy_pystagelinq.device_list.find_registered_device.side_effect = [True]
 
-    assert await dummy_pystagelinq._discover_stagelinq_device() is None
+    assert await dummy_pystagelinq._discover_stagelinq_device(dummy_ip) is None
 
     assert time_mock.time.call_count == 2
     dummy_pystagelinq.device_list.find_registered_device.assert_called_once_with(
@@ -437,7 +456,7 @@ async def test_discover_stagelinq(dummy_pystagelinq, monkeypatch, dummy_ip):
     dummy_pystagelinq.device_list = MagicMock()
     dummy_pystagelinq.device_list.find_registered_device.side_effect = [False]
 
-    assert await dummy_pystagelinq._discover_stagelinq_device() is None
+    assert await dummy_pystagelinq._discover_stagelinq_device(dummy_ip) is None
 
     assert time_mock.time.call_count == 3
     register_device_mock.assert_called_once()
@@ -762,6 +781,9 @@ async def test_wait_for_exit_task_exception(dummy_pystagelinq, monkeypatch):
     sleep_mock = AsyncMock()
     monkeypatch.setattr(PyStageLinQ.PyStageLinQ.asyncio, "sleep", sleep_mock)
 
+    socket = MagicMock()
+    monkeypatch.setattr(PyStageLinQ.PyStageLinQ, "socket", socket)
+
     tasks_mock.copy.side_effect = [[task_mock]]
     get_loop_condition_mock.side_effect = [True, False]
     task_mock.done.side_effect = [True]
@@ -813,7 +835,7 @@ async def test_periodic_announcement(dummy_pystagelinq, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_py_stagelinq_strapper(dummy_pystagelinq, monkeypatch):
+async def test_py_stagelinq_strapper(dummy_pystagelinq, monkeypatch, dummy_ip):
     discover_device_mock = AsyncMock()
     monkeypatch.setattr(
         dummy_pystagelinq, "_discover_stagelinq_device", discover_device_mock
@@ -821,7 +843,63 @@ async def test_py_stagelinq_strapper(dummy_pystagelinq, monkeypatch):
 
     await dummy_pystagelinq._py_stagelinq_strapper()
 
-    discover_device_mock.assert_called_once_with(timeout=2)
+    discover_device_mock.assert_called_once_with(dummy_ip, timeout=2)
+
+
+@pytest.mark.asyncio
+async def test_py_stagelinq_strapper_loop_condition_false(
+    dummy_pystagelinq, monkeypatch, dummy_ip
+):
+    get_loop_condition_mock = Mock(side_effect=[False])
+    monkeypatch.setattr(
+        dummy_pystagelinq, "get_loop_condition", get_loop_condition_mock
+    )
+    discover_device_mock = AsyncMock()
+    monkeypatch.setattr(
+        dummy_pystagelinq, "_discover_stagelinq_device", discover_device_mock
+    )
+
+    await dummy_pystagelinq._py_stagelinq_strapper()
+
+    discover_device_mock.assert_called_once_with(dummy_ip, timeout=2)
+
+
+@pytest.mark.asyncio
+async def test_py_stagelinq_strapper_task_exception(
+    dummy_pystagelinq, monkeypatch, dummy_ip
+):
+
+    asyncio_create_task_mock = MagicMock()
+
+    asyncio_create_task_mock.return_value = asyncio_create_task_mock
+
+    asyncio_create_task_mock.done.return_value = True
+    asyncio_create_task_mock.exception.return_value = RuntimeError
+
+    monkeypatch.setattr(
+        PyStageLinQ.PyStageLinQ.asyncio, "create_task", asyncio_create_task_mock
+    )
+
+    get_loop_condition_mock = Mock()
+    monkeypatch.setattr(
+        dummy_pystagelinq, "get_loop_condition", get_loop_condition_mock
+    )
+
+    sleep_mock = AsyncMock()
+    monkeypatch.setattr(PyStageLinQ.PyStageLinQ.asyncio, "sleep", sleep_mock)
+
+    discover_device_mock = MagicMock()
+    monkeypatch.setattr(
+        dummy_pystagelinq, "_discover_stagelinq_device", discover_device_mock
+    )
+
+    get_loop_condition_mock.side_effect = [True, False]
+
+    with pytest.raises(RuntimeError) as exception:
+        await dummy_pystagelinq._py_stagelinq_strapper()
+    assert get_loop_condition_mock.call_count == 1
+
+    assert exception.type is RuntimeError
 
 
 def test_stop(dummy_pystagelinq, monkeypatch):

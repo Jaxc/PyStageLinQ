@@ -45,8 +45,11 @@ def state_map_data_print(data):
 
 def main():
     global PrimeGo
+    """PrimeGo = PyStageLinQ.PyStageLinQ(
+        new_device_found_callback, name="Jaxcie StageLinQ", ip="169.254.13.37"
+    )"""
     PrimeGo = PyStageLinQ.PyStageLinQ(
-        new_device_found_callback, name="Jaxcie StageLinQ", ip="255.255.255.255"
+        new_device_found_callback, name="Jaxcie StageLinQ"
     )
     PrimeGo.start_standalone()
 
