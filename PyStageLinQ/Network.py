@@ -5,6 +5,7 @@ This code is licensed under MIT license (see LICENSE for details)
 
 from __future__ import annotations
 import asyncio
+import logging
 from . import EngineServices
 from .DataClasses import (
     StageLinQServiceAnnouncementData,
@@ -14,6 +15,8 @@ from .DataClasses import (
 from .MessageClasses import *
 from . import Token
 from typing import Callable, Tuple, List, Any
+
+logger = logging.getLogger("PyStageLinQ")
 
 
 class StageLinQService:
@@ -142,7 +145,7 @@ class StageLinQService:
         frames, self.remaining_data = self.decode_multiframe(response)
         if frames is None:
             # Something went wrong during decoding, lets throw away the frame and hope it doesn't happen again
-            print(f"Error while decoding the frame")
+            logger.debug(f"Error while decoding the frame")
             return False
         self.last_frame = response
         return frames

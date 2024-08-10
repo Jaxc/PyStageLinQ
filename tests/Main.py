@@ -3,7 +3,10 @@
 This code is licensed under MIT license (see LICENSE for details)
 """
 
+import logging
 from PyStageLinQ import EngineServices, PyStageLinQ
+
+logger = logging.getLogger(__name__)
 
 """
 Processes needed for StageLinQ:
@@ -44,6 +47,7 @@ def state_map_data_print(data):
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
     global PrimeGo
     """PrimeGo = PyStageLinQ.PyStageLinQ(
         new_device_found_callback, name="Jaxcie StageLinQ", ip="169.254.13.37"

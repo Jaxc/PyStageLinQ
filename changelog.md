@@ -16,12 +16,14 @@ Code now uses classes instead of raw data in several places.
 
 ### Added
 PyStageLinQ can now send announcement messages and look for StageLinQ devices on all network interfaces.
-To send on only one interface use `PyStageLinQ.__init__(..., ip=169.254.13.37, ...)`
+To send on only one interface use `PyStageLinQ.__int__(..., ip=169.254.13.37, ...)`
 
 Unit tests, code coverage is now 100%. Also added a lot to the CI builds to support this.
+
+PyStageLinQ now uses logging instead of print to report status and info.
 ### Removed
-Remove announcement_ip from `PyStageLinQ.__init__` as this can be derived from chosen ip. e.g. if 169.254.13.37 is chosen
-announcement ip will be at 169.254.255.255.
+Remove announcement_ip from `PyStageLinQ.__init__` as this can be derived from chosen IP address. e.g. if 169.254.13.37 is chosen
+announcement IP address will be at 169.254.255.255.
 
 ## [0.1.2] - Documentation update again
 A lot of small fixes and additions now makes the readthedocs.org link to actually work.
@@ -35,7 +37,7 @@ tag added to git and all release work is done.
 ## [0.1.1] - Documentation update
 Added documentation
 ### Added
-docs/folder with documentation, run `make html` to create documentation. It is also available at h
+docs/folder with documentation, run `make html` to create documentation. It is also available at
 https://pystagelinq.readthedocs.io/en/latest/
 
 ### Changes

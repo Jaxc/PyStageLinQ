@@ -7,6 +7,7 @@ import select
 import socket
 import time
 import asyncio
+import logging
 from typing import Callable
 
 from . import Device
@@ -15,6 +16,8 @@ from .DataClasses import *
 from .ErrorCodes import PyStageLinQError
 from .Network import StageLinQService
 from . import EngineServices
+
+logger = logging.getLogger("PyStageLinQ")
 
 
 class PyStageLinQ:
@@ -190,7 +193,7 @@ class PyStageLinQ:
                 # No devices found within timeout
                 return PyStageLinQError.DISCOVERYTIMEOUT
 
-        print(f"No discovery frames found on {host_ip} last {timeout} seconds.")
+        logger.info(f"No discovery frames found on {host_ip} last {timeout} seconds.")
 
     async def _register_new_device(self, discovery_frame, ip):
         stagelinq_device = StageLinQService(ip, discovery_frame, self.OwnToken, None)
@@ -267,10 +270,12 @@ class PyStageLinQ:
 
     async def _py_stagelinq_strapper(self):
         strapper_tasks = set()
-        print(f"Looking for discovery frames on {len(self.ip)} IP local IP addresses:")
+        logger.info(
+            f"Looking for discovery frames on {len(self.ip)} IP local IP addresses:"
+        )
 
         for ip in self.ip:
-            print(f"{ip}")
+            logger.info(f"{ip}")
             strapper_tasks.add(
                 asyncio.create_task(self._discover_stagelinq_device(ip, timeout=2))
             )
@@ -284,7 +289,7 @@ class PyStageLinQ:
                         raise task.exception()
 
             if all_tasks_done:
-                print("Timeout occurred on all interfaces.")
+                logger.debug("Timeout occurred on all interfaces.")
                 return
             await asyncio.sleep(1)
 
