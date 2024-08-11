@@ -101,19 +101,15 @@ class PyStageLinQ:
         self._start_stagelinq()
 
     def _stop(self):
-        discovery = StageLinQDiscovery()
-        discovery_frame = discovery.encode_frame(
-            StageLinQDiscoveryData(
-                Token=self.OwnToken,
-                DeviceName=self.name,
-                ConnectionType=ConnectionTypes.EXIT,
-                SwName="Python",
-                SwVersion="1.0.0",
-                ReqServicePort=self.REQUESTSERVICEPORT,
-            )
-        )
+        try:
+            discovery = StageLinQDiscovery()
+            discovery_info = self.discovery_info
+            discovery_info.ConnectionType = ConnectionTypes.EXIT
+            discovery_frame = discovery.encode_frame(discovery_info)
 
-        self._send_discovery_frame(discovery_frame)
+            self._send_discovery_frame(discovery_frame)
+        except:
+            logger.debug('Could not send "EXIT" discovery frame during shutdown')
 
     def _announce_self(self):
         discovery = StageLinQDiscovery()
@@ -259,7 +255,7 @@ class PyStageLinQ:
                     return
             await asyncio.sleep(1)
 
-    async def _stop_all_tasks(self):
+    def _stop_all_tasks(self):
         for task in self.tasks.copy():
             task.cancel()
 
@@ -294,4 +290,8 @@ class PyStageLinQ:
             await asyncio.sleep(1)
 
     def stop(self):
+        self._stop()
+
+    def __del__(self):
+        self._stop_all_tasks()
         self._stop()

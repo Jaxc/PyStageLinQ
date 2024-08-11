@@ -21,6 +21,8 @@ To send on only one interface use `PyStageLinQ.__int__(..., ip=169.254.13.37, ..
 Unit tests, code coverage is now 100%. Also added a lot to the CI builds to support this.
 
 PyStageLinQ now uses logging instead of print to report status and info.
+
+PyStageLinQ now behaves properly when object is deleted.
 ### Removed
 Remove announcement_ip from `PyStageLinQ.__init__` as this can be derived from chosen IP address. e.g. if 169.254.13.37 is chosen
 announcement IP address will be at 169.254.255.255.
