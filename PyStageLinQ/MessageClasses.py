@@ -39,7 +39,7 @@ class StageLinQMessage:
 
         if data_stop > len(frame):
             # Out of bounds
-            raise PyStageLinQError.INVALIDLENGTH
+            raise Exception(PyStageLinQError.INVALIDLENGTH)
 
         return data_stop, frame[data_start:data_stop].decode(encoding="UTF-16be")
 
@@ -105,17 +105,14 @@ class StageLinQDiscovery(StageLinQMessage):
         )
 
     def decode_frame(self, frame):
-        if len(frame) < self.length:
-            return PyStageLinQError.INVALIDLENGTH
+        if len(frame) < self.min_length:
+            return PyStageLinQError.INVALIDFRAME
 
         # Local Constants
         token_start = self.magic_flag_stop
         token_length = StageLinQToken.TOKENLENGTH
         token_stop = token_start + token_length
         device_name_size_start = token_stop
-
-        if len(frame) < self.magic_flag_length:
-            return PyStageLinQError.INVALIDFRAME
 
         # Check if Frame contains Magic flag
         if (
@@ -144,8 +141,11 @@ class StageLinQDiscovery(StageLinQMessage):
                 frame, sw_version_start
             )
 
-        except PyStageLinQError.INVALIDLENGTH:
-            return PyStageLinQError.INVALIDLENGTH
+        except Exception as e:
+            if str(e) == str(PyStageLinQError.INVALIDLENGTH):
+                return PyStageLinQError.INVALIDLENGTH
+            else:
+                raise e
 
         port_stop = port_start + self.port_length
 
@@ -206,8 +206,11 @@ class StageLinQServiceAnnouncement(StageLinQMessage):
             port_start, self.Service = self.read_network_string(
                 frame, service_name_start
             )
-        except PyStageLinQError.INVALIDLENGTH:
-            return PyStageLinQError.INVALIDLENGTH
+        except Exception as e:
+            if str(e) == str(PyStageLinQError.INVALIDLENGTH):
+                return PyStageLinQError.INVALIDLENGTH
+            else:
+                raise e
 
         port_stop = port_start + self.port_length
 

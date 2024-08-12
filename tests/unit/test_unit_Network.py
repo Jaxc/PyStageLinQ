@@ -2,10 +2,7 @@ import pytest
 import PyStageLinQ.Network
 import PyStageLinQ.DataClasses
 from unittest.mock import AsyncMock, Mock, MagicMock
-
-import tracemalloc
-
-tracemalloc.start()
+from PyStageLinQ.ErrorCodes import PyStageLinQError
 
 import random
 
@@ -319,6 +316,36 @@ async def test_receive_frames_valid_data(dummy_stagelinq_service, monkeypatch):
     )
 
     assert await dummy_stagelinq_service._receive_frames() == frames_data
+
+    assert dummy_stagelinq_service.last_frame == response_data
+
+
+@pytest.mark.asyncio
+async def test_receive_frames_valid_data_multiframe(
+    dummy_stagelinq_service, monkeypatch
+):
+    response_data = b"AAAA"
+    frames_data = b"BBBB"
+    remaining_data = b"CCCC"
+
+    class reader:
+        read = AsyncMock(side_effect=[response_data])
+
+    reader_dummy = reader()
+    dummy_stagelinq_service.reader = reader_dummy
+
+    decode_multiframe_mock = Mock(side_effect=[[frames_data, None]])
+    monkeypatch.setattr(
+        dummy_stagelinq_service, "decode_multiframe", decode_multiframe_mock
+    )
+
+    dummy_stagelinq_service.remaining_data = remaining_data
+
+    assert await dummy_stagelinq_service._receive_frames() == frames_data
+
+    assert dummy_stagelinq_service.last_frame == b"".join(
+        [remaining_data, response_data]
+    )
 
 
 @pytest.mark.asyncio
@@ -748,6 +775,32 @@ def test_decode_multiframe_decoding_failed(dummy_stagelinq_service, monkeypatch)
     )
 
     assert dummy_stagelinq_service.decode_multiframe(service) == None
+
+    assert service_announcement_mock.decode_frame.call_count == 1
+    assert service_announcement_mock.get.call_count == 0
+    assert service_announcement_mock.get_len.call_count == 0
+
+
+def test_decode_multiframe_decoding_too_short(dummy_stagelinq_service, monkeypatch):
+    service = (
+        PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQServiceRequestData
+        + b"56778"
+    )
+
+    frame_data = b"1234"
+
+    class service_announcement_dummy:
+        decode_frame = Mock(side_effect=[PyStageLinQError.INVALIDLENGTH])
+        get = Mock(side_effect=[frame_data])
+        get_len = Mock(side_effect=[10])
+
+    service_announcement_mock = service_announcement_dummy()
+
+    monkeypatch.setattr(
+        PyStageLinQ.Network, "StageLinQRequestServices", service_announcement_dummy
+    )
+
+    assert dummy_stagelinq_service.decode_multiframe(service) == ([], service)
 
     assert service_announcement_mock.decode_frame.call_count == 1
     assert service_announcement_mock.get.call_count == 0

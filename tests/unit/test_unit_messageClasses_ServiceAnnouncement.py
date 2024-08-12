@@ -81,6 +81,58 @@ def test_decode_frame_invalid_frame_id(stagelinq_service_announcement):
     )
 
 
+def test_decode_frame_invalid_network_string_length(
+    stagelinq_service_announcement, monkeypatch, dummy_token, dummy_port
+):
+    def read_invalid_network_string(arg1, arg2):
+        raise Exception(PyStageLinQError.INVALIDLENGTH)
+
+    test_string = "hello"
+
+    dummy_frame = (
+        PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQServiceAnnouncementData
+        + dummy_token.get_token().to_bytes(16, byteorder="big")
+        + test_string.encode(encoding="UTF-16be")
+        + dummy_port.to_bytes(2, byteorder="big")
+    )
+
+    monkeypatch.setattr(
+        stagelinq_service_announcement,
+        "read_network_string",
+        read_invalid_network_string,
+    )
+
+    assert (
+        stagelinq_service_announcement.decode_frame(dummy_frame)
+        == PyStageLinQError.INVALIDLENGTH
+    )
+
+
+def test_decode_frame_network_string_length_error(
+    stagelinq_service_announcement, monkeypatch, dummy_token, dummy_port
+):
+    def read_invalid_network_string(arg1, arg2):
+        raise ValueError
+
+    test_string = "hello"
+
+    dummy_frame = (
+        PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQServiceAnnouncementData
+        + dummy_token.get_token().to_bytes(16, byteorder="big")
+        + test_string.encode(encoding="UTF-16be")
+        + dummy_port.to_bytes(2, byteorder="big")
+    )
+
+    monkeypatch.setattr(
+        stagelinq_service_announcement,
+        "read_network_string",
+        read_invalid_network_string,
+    )
+
+    with pytest.raises(Exception):
+        stagelinq_service_announcement.decode_frame(dummy_frame)
+
+
 def test_decode_frame_valid_input(
     stagelinq_service_announcement, dummy_token, dummy_port, monkeypatch
 ):
@@ -112,6 +164,32 @@ def test_decode_frame_valid_input(
     ) == dummy_port.to_bytes(2, byteorder="big")
 
     assert stagelinq_service_announcement.get_len() == 32
+
+
+def test_decode_port_to_short(
+    stagelinq_service_announcement, dummy_token, dummy_port, monkeypatch
+):
+    test_string = "hello"
+
+    def read_network_string_mock(_, start_offset):
+        fields = [dummy_token.get_token(), test_string, dummy_port]
+        return start_offset + 10, fields[start_offset - 20]
+
+    monkeypatch.setattr(
+        stagelinq_service_announcement, "read_network_string", read_network_string_mock
+    )
+
+    dummy_frame = (
+        PyStageLinQ.DataClasses.StageLinQMessageIDs.StageLinQServiceAnnouncementData
+        + dummy_token.get_token().to_bytes(16, byteorder="big")
+        + test_string.encode(encoding="UTF-16be")
+        + (20).to_bytes(1, byteorder="big")
+    )
+
+    assert (
+        stagelinq_service_announcement.decode_frame(dummy_frame)
+        == PyStageLinQError.INVALIDLENGTH
+    )
 
 
 def test_verify_get_data(stagelinq_service_announcement, dummy_token, dummy_port):

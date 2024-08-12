@@ -144,29 +144,41 @@ def test_decode_frame_invalid_magic_flag_length(stagelinq_discovery):
 
 def test_decode_frame_invalid_magic_flag(stagelinq_discovery):
     assert (
-        stagelinq_discovery.decode_frame("airJ".encode())
+        stagelinq_discovery.decode_frame(
+            "airJ<just some text to fill the frame>".encode()
+        )
         == PyStageLinQError.MAGICFLAGNOTFOUND
     )
 
 
-def test_decode_frame_invalid_token_type(stagelinq_discovery, monkeypatch):
-    def set_token_invalid_type(_):
-        return PyStageLinQError.INVALIDTOKENTYPE
+def test_decode_frame_invalid_network_string_length(stagelinq_discovery, monkeypatch):
+    def read_invalid_network_string(arg1, arg2):
+        raise Exception(PyStageLinQError.INVALIDLENGTH)
 
-    monkeypatch.setattr(stagelinq_discovery.token, "set_token", set_token_invalid_type)
+    monkeypatch.setattr(
+        stagelinq_discovery, "read_network_string", read_invalid_network_string
+    )
+
+    assert (
+        stagelinq_discovery.decode_frame(
+            "airDtest_decode_frame_invalid_token_length".encode()
+        )
+        == PyStageLinQError.INVALIDLENGTH
+    )
+
+
+def test_decode_frame_network_string_length_error(stagelinq_discovery, monkeypatch):
+    def read_invalid_network_string(arg1, arg2):
+        raise ValueError
+
+    monkeypatch.setattr(
+        stagelinq_discovery, "read_network_string", read_invalid_network_string
+    )
 
     with pytest.raises(Exception):
-        stagelinq_discovery.decode_frame("airD".encode())
-
-
-def test_decode_frame_invalid_token_length(stagelinq_discovery, monkeypatch):
-    def set_token_invalid(_):
-        return PyStageLinQError.INVALIDTOKEN
-
-    monkeypatch.setattr(stagelinq_discovery.token, "set_token", set_token_invalid)
-
-    with pytest.raises(Exception):
-        stagelinq_discovery.decode_frame("airD".encode())
+        stagelinq_discovery.decode_frame(
+            "airDtest_decode_frame_invalid_token_length".encode()
+        )
 
 
 def test_decode_frame_valid_input(stagelinq_discovery, monkeypatch, dummy_port):
@@ -202,3 +214,31 @@ def test_decode_frame_valid_input(stagelinq_discovery, monkeypatch, dummy_port):
     assert type(stagelinq_discovery.token) is PyStageLinQ.Token.StageLinQToken
     assert stagelinq_discovery.token.get_token() == 0
     assert stagelinq_discovery.length == 26
+
+
+def test_decode_frame_port_too_short(stagelinq_discovery, monkeypatch, dummy_port):
+    def read_network_string(_, start_offset):
+        fields = [
+            device_name_dummy,
+            connection_type_dummy,
+            sw_name_dummy,
+            sw_version_dummy,
+            dummy_port,
+        ]
+        return start_offset + 1, fields[start_offset - 20]
+
+    def set_token_valid(_):
+        return PyStageLinQError.STAGELINQOK
+
+    monkeypatch.setattr(stagelinq_discovery.token, "set_token", set_token_valid)
+    monkeypatch.setattr(stagelinq_discovery, "read_network_string", read_network_string)
+
+    dummy_frame = (
+        bytearray("airD".encode())
+        + random.randbytes(20)
+        + (20).to_bytes(1, byteorder="big")
+    )
+
+    assert (
+        stagelinq_discovery.decode_frame(dummy_frame) == PyStageLinQError.INVALIDLENGTH
+    )
