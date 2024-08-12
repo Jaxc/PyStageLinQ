@@ -1,7 +1,7 @@
 # Changelog
 Here follows a log of released versions of PyStageLinQ.
 
-## [DEV] 
+## [0.2.0] 
 ### Fixed
 Invalid tokens are not generated, this used to cause issues when starting as a StageLinQ device does respond to clients
 with invalid tokens.
