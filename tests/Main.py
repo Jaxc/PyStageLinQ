@@ -7,6 +7,10 @@ import logging
 from PyStageLinQ import EngineServices, PyStageLinQ
 
 logger = logging.getLogger(__name__)
+PyStageLinQLogger = logging.getLogger("PyStageLinQ")
+logging.basicConfig(
+    level=logging.DEBUG, format="[%(filename)s:%(lineno)d %(levelname)s - %(message)s"
+)
 
 """
 Processes needed for StageLinQ:

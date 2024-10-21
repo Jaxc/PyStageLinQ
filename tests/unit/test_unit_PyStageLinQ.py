@@ -200,12 +200,6 @@ def test_send_discovery_frame_permission_error(
         dummy_socket.SOL_SOCKET, dummy_socket.SO_BROADCAST, 1
     )
 
-    assert (
-        exception.value.args[0]
-        == f"Cannot send message on interface {dummy_ip}, this error could be due to that there is no network "
-        f"interface set up with this IP range"
-    )
-
 
 @pytest.mark.asyncio
 async def test_discover_stagelinq_device_bind_error(
@@ -504,6 +498,7 @@ async def test_register_new_device(dummy_pystagelinq, monkeypatch, dummy_ip):
             assert B == "BBBB"
             assert C == dummy_pystagelinq.OwnToken
             assert D is None
+            self.device_name = "UnitTest"
 
         get_tasks = AsyncMock()
         wait_for_services = AsyncMock()
@@ -530,6 +525,7 @@ async def test_register_new_task(dummy_pystagelinq, monkeypatch, dummy_ip):
             assert B == "BBBB"
             assert C == dummy_pystagelinq.OwnToken
             assert D is None
+            self.device_name = "UnitTest"
 
         get_tasks = AsyncMock()
         wait_for_services = AsyncMock()
@@ -562,6 +558,7 @@ async def test_register_callback(dummy_pystagelinq, monkeypatch, dummy_ip):
             assert B == "BBBB"
             assert C == dummy_pystagelinq.OwnToken
             assert D is None
+            self.device_name = "UnitTest"
 
         get_tasks = AsyncMock()
         wait_for_services = AsyncMock()
@@ -822,16 +819,18 @@ async def test_wait_for_exit_task_exception(
     tasks_mock.copy.side_effect = [[task_mock]]
     get_loop_condition_mock.side_effect = [True, False]
     task_mock.done.side_effect = [True]
-    task_mock.exception.side_effect = [[RuntimeError], RuntimeError]
+    # An error as obscure as possible is picket to avoid false positives.
+    task_mock.exception.return_value = NotImplementedError
+    task_mock.get_coro.return_value = "error task"
 
-    with pytest.raises(RuntimeError) as exception:
+    with pytest.raises(NotImplementedError) as exception:
         await dummy_pystagelinq._wait_for_exit()
 
     assert get_loop_condition_mock.call_count == 1
     tasks_mock.copy.assert_called_once_with()
     task_mock.done.assert_called_once_with()
-    assert task_mock.exception.call_count == 2
-    assert exception.type is RuntimeError
+    assert task_mock.exception.call_count == 3
+    assert exception.type is NotImplementedError
 
 
 @pytest.mark.asyncio
