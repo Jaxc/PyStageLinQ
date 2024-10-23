@@ -21,6 +21,10 @@ keywords = ["StageLinQ", "DJ", "VJ", "Denon DJ", "Prime Go", "Streaming"]
 
 version = "0.0.0"
 
+dependencies = [
+"psutil",
+]
+
 [project.urls]
 "Homepage" = "https://github.com/Jaxc/PyStageLinQ"
 "Bug Tracker" = "https://github.com/Jaxc/PyStageLinQ/issues"
