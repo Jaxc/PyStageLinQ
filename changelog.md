@@ -2,6 +2,11 @@
 Here follows a log of released versions of PyStageLinQ.
 
 ## [0.2.2]
+### Fixed
+Problems on Linux should now be solved.
+PyStageLinQ will now listen to address "255.255.255.255" on all interfaces, and transmit discovery frames on either the
+interface specified by `PyStageLinQ(..., ip=)` or on all interfaces if `ip` is not set.
+
 ### Added
 More logging output in PyStageLinQ.py.
 

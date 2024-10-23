@@ -8,6 +8,7 @@ import socket
 import time
 import asyncio
 import logging
+import psutil
 from typing import Callable
 
 from . import Device
@@ -63,11 +64,13 @@ class PyStageLinQ:
 
         self.device_list = Device.DeviceList()
 
+        self.ip = []
         if ip is None:
-            interfaces = socket.getaddrinfo(
-                host=socket.gethostname(), port=None, family=socket.AF_INET
-            )
-            self.ip = [ip[-1][0] for ip in interfaces]
+            interfaces = psutil.net_if_addrs()
+            for interface in interfaces.items():
+                for interface_address in interface[1]:
+                    if socket.AF_INET == interface_address.family:
+                        self.ip.append(interface_address.address)
 
         else:
             self.ip = [ip]
@@ -155,7 +158,7 @@ class PyStageLinQ:
         discover_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             discover_socket.bind(
-                (host_ip, self.StageLinQ_discovery_port)
+                ("255.255.255.255", self.StageLinQ_discovery_port)
             )  # bind socket StageLinQ interface
         except:
             # Cannot bind to socket, check if IP is correct and link is up

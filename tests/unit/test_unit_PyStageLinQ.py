@@ -3,6 +3,7 @@ import PyStageLinQ.PyStageLinQ
 from PyStageLinQ.ErrorCodes import *
 from unittest.mock import AsyncMock, Mock, MagicMock
 from unittest import mock
+from socket import AF_INET
 
 import random
 
@@ -77,13 +78,26 @@ def test_init_values(dummy_pystagelinq, dummy_ip):
 
 
 def test_init_values_ip_none(monkeypatch, dummy_socket):
-    dummy_ips = [[["1,2,3,4"]], [["5.6.7.8"]]]
-    dummy_socket.getaddrinfo.return_value = dummy_ips
-    monkeypatch.setattr(PyStageLinQ.PyStageLinQ, "socket", dummy_socket)
+    class ifutils_net_if_addrs:
+        def __init__(self, ip=[]):
+            self.address = ip
+            self.family = AF_INET
+
+    dummy_psutil = MagicMock()
+    dummy_ips = {
+        "interface1": [ifutils_net_if_addrs(ip="1.2.3.4")],
+        "interface2": [ifutils_net_if_addrs(ip="5.6.7.8")],
+        "interface3": [ifutils_net_if_addrs(ip="9.10.11.12")],
+    }
+
+    dummy_ips["interface3"][0].family = None
+
+    dummy_psutil.net_if_addrs.return_value = dummy_ips
+    monkeypatch.setattr(PyStageLinQ.PyStageLinQ, "psutil", dummy_psutil)
 
     dummy_pystagelinq = PyStageLinQ.PyStageLinQ.PyStageLinQ(None, ip=None)
 
-    assert dummy_pystagelinq.ip == [dummy_ips[0][0][0], dummy_ips[1][0][0]]
+    assert dummy_pystagelinq.ip == ["1.2.3.4", "5.6.7.8"]
 
 
 def test_start_standalone(dummy_pystagelinq, monkeypatch):
@@ -243,7 +257,7 @@ async def test_discover_stagelinq_check_initialization(
         dummy_socket.AF_INET, dummy_socket.SOCK_DGRAM
     )
     dummy_socket.socket.return_value.bind.assert_called_once_with(
-        (dummy_pystagelinq.ip[0], dummy_pystagelinq.StageLinQ_discovery_port)
+        ("255.255.255.255", dummy_pystagelinq.StageLinQ_discovery_port)
     )
     dummy_socket.socket.return_value.setblocking.assert_called_once_with(False)
 
