@@ -19,11 +19,11 @@ sys.path.insert(0, os.path.abspath(".."))
 # -- Project information -----------------------------------------------------
 
 project = "PyStageLinQ"
-copyright = "2022, Jaxcie"
+copyright = "2024, Jaxcie"
 author = "Jaxcie"
 
 # The full version, including alpha/beta/rc tags
-release = "0.1.0"
+release = "0.0.0"
 
 # -- General configuration ---------------------------------------------------
 
