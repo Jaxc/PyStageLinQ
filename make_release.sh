@@ -8,6 +8,7 @@ echo "Version detected from git tag: $new_ver"
 
 echo "Updating pyproject.toml"
 sed -i 's/version = "0.0.0"/version = "'$new_ver'"/' pyproject.toml
+sed -i 's/release = "0.0.0"/release = "'$new_ver'"/' docs/conf.py
 
 
 rm dist/* -f

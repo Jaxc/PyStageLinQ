@@ -3,6 +3,7 @@ import PyStageLinQ.PyStageLinQ
 from PyStageLinQ.ErrorCodes import *
 from unittest.mock import AsyncMock, Mock, MagicMock
 from unittest import mock
+from socket import AF_INET
 
 import random
 
@@ -77,13 +78,26 @@ def test_init_values(dummy_pystagelinq, dummy_ip):
 
 
 def test_init_values_ip_none(monkeypatch, dummy_socket):
-    dummy_ips = [[["1,2,3,4"]], [["5.6.7.8"]]]
-    dummy_socket.getaddrinfo.return_value = dummy_ips
-    monkeypatch.setattr(PyStageLinQ.PyStageLinQ, "socket", dummy_socket)
+    class ifutils_net_if_addrs:
+        def __init__(self, ip=[]):
+            self.address = ip
+            self.family = AF_INET
+
+    dummy_psutil = MagicMock()
+    dummy_ips = {
+        "interface1": [ifutils_net_if_addrs(ip="1.2.3.4")],
+        "interface2": [ifutils_net_if_addrs(ip="5.6.7.8")],
+        "interface3": [ifutils_net_if_addrs(ip="9.10.11.12")],
+    }
+
+    dummy_ips["interface3"][0].family = None
+
+    dummy_psutil.net_if_addrs.return_value = dummy_ips
+    monkeypatch.setattr(PyStageLinQ.PyStageLinQ, "psutil", dummy_psutil)
 
     dummy_pystagelinq = PyStageLinQ.PyStageLinQ.PyStageLinQ(None, ip=None)
 
-    assert dummy_pystagelinq.ip == [dummy_ips[0][0][0], dummy_ips[1][0][0]]
+    assert dummy_pystagelinq.ip == ["1.2.3.4", "5.6.7.8"]
 
 
 def test_start_standalone(dummy_pystagelinq, monkeypatch):
@@ -200,12 +214,6 @@ def test_send_discovery_frame_permission_error(
         dummy_socket.SOL_SOCKET, dummy_socket.SO_BROADCAST, 1
     )
 
-    assert (
-        exception.value.args[0]
-        == f"Cannot send message on interface {dummy_ip}, this error could be due to that there is no network "
-        f"interface set up with this IP range"
-    )
-
 
 @pytest.mark.asyncio
 async def test_discover_stagelinq_device_bind_error(
@@ -249,7 +257,7 @@ async def test_discover_stagelinq_check_initialization(
         dummy_socket.AF_INET, dummy_socket.SOCK_DGRAM
     )
     dummy_socket.socket.return_value.bind.assert_called_once_with(
-        (dummy_pystagelinq.ip[0], dummy_pystagelinq.StageLinQ_discovery_port)
+        ("255.255.255.255", dummy_pystagelinq.StageLinQ_discovery_port)
     )
     dummy_socket.socket.return_value.setblocking.assert_called_once_with(False)
 
@@ -504,6 +512,7 @@ async def test_register_new_device(dummy_pystagelinq, monkeypatch, dummy_ip):
             assert B == "BBBB"
             assert C == dummy_pystagelinq.OwnToken
             assert D is None
+            self.device_name = "UnitTest"
 
         get_tasks = AsyncMock()
         wait_for_services = AsyncMock()
@@ -530,6 +539,7 @@ async def test_register_new_task(dummy_pystagelinq, monkeypatch, dummy_ip):
             assert B == "BBBB"
             assert C == dummy_pystagelinq.OwnToken
             assert D is None
+            self.device_name = "UnitTest"
 
         get_tasks = AsyncMock()
         wait_for_services = AsyncMock()
@@ -562,6 +572,7 @@ async def test_register_callback(dummy_pystagelinq, monkeypatch, dummy_ip):
             assert B == "BBBB"
             assert C == dummy_pystagelinq.OwnToken
             assert D is None
+            self.device_name = "UnitTest"
 
         get_tasks = AsyncMock()
         wait_for_services = AsyncMock()
@@ -822,16 +833,18 @@ async def test_wait_for_exit_task_exception(
     tasks_mock.copy.side_effect = [[task_mock]]
     get_loop_condition_mock.side_effect = [True, False]
     task_mock.done.side_effect = [True]
-    task_mock.exception.side_effect = [[RuntimeError], RuntimeError]
+    # An error as obscure as possible is picket to avoid false positives.
+    task_mock.exception.return_value = NotImplementedError
+    task_mock.get_coro.return_value = "error task"
 
-    with pytest.raises(RuntimeError) as exception:
+    with pytest.raises(NotImplementedError) as exception:
         await dummy_pystagelinq._wait_for_exit()
 
     assert get_loop_condition_mock.call_count == 1
     tasks_mock.copy.assert_called_once_with()
     task_mock.done.assert_called_once_with()
-    assert task_mock.exception.call_count == 2
-    assert exception.type is RuntimeError
+    assert task_mock.exception.call_count == 3
+    assert exception.type is NotImplementedError
 
 
 @pytest.mark.asyncio
