@@ -7,6 +7,8 @@ Problems on Linux should now be solved.
 PyStageLinQ will now listen to address "255.255.255.255" on all interfaces, and transmit discovery frames on either the
 interface specified by `PyStageLinQ(..., ip=)` or on all interfaces if `ip` is not set.
 
+PyStageLinQ will now use its release version when sending discovery frames.
+
 ### Added
 More logging output in PyStageLinQ.py.
 

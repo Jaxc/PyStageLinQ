@@ -49,7 +49,7 @@ def test_init_values(dummy_pystagelinq, dummy_ip):
     assert dummy_pystagelinq.discovery_info.DeviceName == name
     assert dummy_pystagelinq.discovery_info.ConnectionType is "DISCOVERER_HOWDY_"
     assert dummy_pystagelinq.discovery_info.SwName == "Python"
-    assert dummy_pystagelinq.discovery_info.SwVersion == "1.0.0"
+    assert dummy_pystagelinq.discovery_info.SwVersion == "0.0.1"
     assert (
         dummy_pystagelinq.discovery_info.ReqServicePort
         == dummy_pystagelinq.REQUESTSERVICEPORT
@@ -140,7 +140,7 @@ def test_internal_stop(dummy_pystagelinq, monkeypatch):
                 DeviceName=dummy_pystagelinq.name,
                 ConnectionType="DISCOVERER_EXIT_",
                 SwName="Python",
-                SwVersion="1.0.0",
+                SwVersion="0.0.1",
                 ReqServicePort=dummy_pystagelinq.REQUESTSERVICEPORT,
             )
         )

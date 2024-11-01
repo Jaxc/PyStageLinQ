@@ -58,7 +58,7 @@ class PyStageLinQ:
             DeviceName=self.name,
             ConnectionType=ConnectionTypes.HOWDY,
             SwName="Python",
-            SwVersion="1.0.0",
+            SwVersion="0.0.1",
             ReqServicePort=self.REQUESTSERVICEPORT,
         )
 
