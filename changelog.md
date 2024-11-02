@@ -3,14 +3,24 @@ Here follows a log of released versions of PyStageLinQ.
 
 ## [0.2.2]
 ### Fixed
-Problems on Linux should now be solved.
+Problems on Linux should now be solved. The soluton has been tested on both Windows and Linux and seems to be
+working on both systems!
+
 PyStageLinQ will now listen to address "255.255.255.255" on all interfaces, and transmit discovery frames on either the
 interface specified by `PyStageLinQ(..., ip=)` or on all interfaces if `ip` is not set.
 
 PyStageLinQ will now use its release version when sending discovery frames.
 
+Invalid Tokens should not be generated anymore, causing PyStageLinQ to fail to get services.
+
 ### Added
 More logging output in PyStageLinQ.py.
+
+A short delay when PyStageLinQ is started between sending discovery frames and trying to request services.
+This is due to an issue with the StageLinQ device rejecting the service request due to it not having seen the discovery
+message.
+
+Release instructions to help to make releases quicker and more consistent. 
 
 
 ## [0.2.0] 

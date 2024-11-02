@@ -2,8 +2,6 @@ import pytest
 import PyStageLinQ.PyStageLinQ
 from PyStageLinQ.ErrorCodes import *
 from unittest.mock import AsyncMock, Mock, MagicMock
-from unittest import mock
-from socket import AF_INET
 
 import random
 
@@ -26,7 +24,17 @@ def dummy_socket():
 
 
 @pytest.fixture()
-def dummy_pystagelinq(dummy_ip):
+def dummy_PyStageLinQ_network_interface():
+    return MagicMock()
+
+
+@pytest.fixture()
+def dummy_pystagelinq(dummy_ip, monkeypatch, dummy_PyStageLinQ_network_interface):
+    monkeypatch.setattr(
+        PyStageLinQ.PyStageLinQ,
+        "PyStageLinQ_network_interface",
+        dummy_PyStageLinQ_network_interface,
+    )
     return PyStageLinQ.PyStageLinQ.PyStageLinQ(None, name=name, ip=dummy_ip)
 
 
@@ -41,13 +49,14 @@ def ensure_cleanup(dummy_socket):
     gc.collect()
 
 
-def test_init_values(dummy_pystagelinq, dummy_ip):
+def test_init_values(dummy_pystagelinq, dummy_ip, dummy_PyStageLinQ_network_interface):
     assert dummy_pystagelinq.REQUESTSERVICEPORT == 0
+    assert dummy_pystagelinq._loopcondition is True
     assert dummy_pystagelinq.name == name
     assert dummy_pystagelinq.OwnToken.get_token() != 0
     assert dummy_pystagelinq.discovery_info.Token is dummy_pystagelinq.OwnToken
     assert dummy_pystagelinq.discovery_info.DeviceName == name
-    assert dummy_pystagelinq.discovery_info.ConnectionType is "DISCOVERER_HOWDY_"
+    assert dummy_pystagelinq.discovery_info.ConnectionType == "DISCOVERER_HOWDY_"
     assert dummy_pystagelinq.discovery_info.SwName == "Python"
     assert dummy_pystagelinq.discovery_info.SwVersion == "0.0.1"
     assert (
@@ -58,46 +67,13 @@ def test_init_values(dummy_pystagelinq, dummy_ip):
     assert (
         type(dummy_pystagelinq.device_list) is PyStageLinQ.PyStageLinQ.Device.DeviceList
     )
-    assert dummy_pystagelinq.ip == [dummy_ip]
+    dummy_PyStageLinQ_network_interface.assert_called_once_with(dummy_ip)
 
     assert dummy_pystagelinq.tasks == set()
 
-    assert dummy_pystagelinq.found_services == []
-    assert dummy_pystagelinq.new_services_available is False
-
     assert dummy_pystagelinq.active_services == []
 
-    assert dummy_pystagelinq.devices_with_services_pending_list == []
-    assert dummy_pystagelinq.devices_with_services_pending is False
-    assert (
-        type(dummy_pystagelinq.devices_with_services_lock)
-        == PyStageLinQ.PyStageLinQ.asyncio.Lock
-    )
-
     assert dummy_pystagelinq.new_device_found_callback is None
-
-
-def test_init_values_ip_none(monkeypatch, dummy_socket):
-    class ifutils_net_if_addrs:
-        def __init__(self, ip=[]):
-            self.address = ip
-            self.family = AF_INET
-
-    dummy_psutil = MagicMock()
-    dummy_ips = {
-        "interface1": [ifutils_net_if_addrs(ip="1.2.3.4")],
-        "interface2": [ifutils_net_if_addrs(ip="5.6.7.8")],
-        "interface3": [ifutils_net_if_addrs(ip="9.10.11.12")],
-    }
-
-    dummy_ips["interface3"][0].family = None
-
-    dummy_psutil.net_if_addrs.return_value = dummy_ips
-    monkeypatch.setattr(PyStageLinQ.PyStageLinQ, "psutil", dummy_psutil)
-
-    dummy_pystagelinq = PyStageLinQ.PyStageLinQ.PyStageLinQ(None, ip=None)
-
-    assert dummy_pystagelinq.ip == ["1.2.3.4", "5.6.7.8"]
 
 
 def test_start_standalone(dummy_pystagelinq, monkeypatch):
@@ -124,16 +100,14 @@ def test_start(dummy_pystagelinq, monkeypatch):
 
 
 def test_internal_stop(dummy_pystagelinq, monkeypatch):
-    send_discovery_frame_mock = Mock()
+    network_interface_mock = Mock()
     dummy_discovery = PyStageLinQ.PyStageLinQ.StageLinQDiscovery()
 
-    monkeypatch.setattr(
-        dummy_pystagelinq, "_send_discovery_frame", send_discovery_frame_mock
-    )
+    monkeypatch.setattr(dummy_pystagelinq, "network_interface", network_interface_mock)
 
     dummy_pystagelinq._stop()
 
-    send_discovery_frame_mock.assert_called_once_with(
+    network_interface_mock.send_discovery_frame.assert_called_once_with(
         dummy_discovery.encode_frame(
             PyStageLinQ.PyStageLinQ.StageLinQDiscoveryData(
                 Token=dummy_pystagelinq.OwnToken,
@@ -148,70 +122,15 @@ def test_internal_stop(dummy_pystagelinq, monkeypatch):
 
 
 def test_announce_self(dummy_pystagelinq, monkeypatch):
-    send_discovery_frame_mock = Mock()
+    network_interface_mock = Mock()
     dummy_discovery = PyStageLinQ.PyStageLinQ.StageLinQDiscovery()
 
-    monkeypatch.setattr(
-        dummy_pystagelinq, "_send_discovery_frame", send_discovery_frame_mock
-    )
+    monkeypatch.setattr(dummy_pystagelinq, "network_interface", network_interface_mock)
 
     dummy_pystagelinq._announce_self()
 
-    send_discovery_frame_mock.assert_called_once_with(
+    network_interface_mock.send_discovery_frame.assert_called_once_with(
         dummy_discovery.encode_frame(dummy_pystagelinq.discovery_info)
-    )
-
-
-def test_send_discovery_frame(dummy_pystagelinq, monkeypatch, dummy_socket):
-
-    dummy_discovery_frame = "AAAA"
-
-    discovery_socket = MagicMock()
-
-    dummy_socket.socket.side_effect = discovery_socket
-
-    dummy_socket.getaddrinfo.side_effect = [[["255.255.255.255"]]]
-
-    monkeypatch.setattr(PyStageLinQ.PyStageLinQ, "socket", dummy_socket)
-
-    dummy_pystagelinq._send_discovery_frame(dummy_discovery_frame)
-
-    dummy_socket.socket.assert_called_once_with(
-        dummy_socket.AF_INET, dummy_socket.SOCK_DGRAM
-    )
-    discovery_socket.return_value.__enter__.return_value.setsockopt.assert_called_once_with(
-        dummy_socket.SOL_SOCKET, dummy_socket.SO_BROADCAST, 1
-    )
-    discovery_socket.return_value.__enter__.return_value.sendto.assert_called_once_with(
-        dummy_discovery_frame,
-        ("255.255.255.255", dummy_pystagelinq.StageLinQ_discovery_port),
-    )
-
-
-def test_send_discovery_frame_permission_error(
-    dummy_pystagelinq, monkeypatch, dummy_ip, dummy_socket
-):
-    dummy_discovery_frame = "AAAA"
-
-    discovery_socket = MagicMock()
-
-    dummy_socket.getaddrinfo.side_effect = [[["255.255.255.255"]]]
-
-    dummy_socket.socket.side_effect = discovery_socket
-    discovery_socket.return_value.__enter__.return_value.sendto.side_effect = (
-        PermissionError
-    )
-
-    monkeypatch.setattr(PyStageLinQ.PyStageLinQ, "socket", dummy_socket)
-
-    with pytest.raises(PermissionError) as exception:
-        dummy_pystagelinq._send_discovery_frame(dummy_discovery_frame)
-
-    dummy_socket.socket.assert_called_once_with(
-        dummy_socket.AF_INET, dummy_socket.SOCK_DGRAM
-    )
-    discovery_socket.return_value.__enter__.return_value.setsockopt.assert_called_once_with(
-        dummy_socket.SOL_SOCKET, dummy_socket.SO_BROADCAST, 1
     )
 
 
@@ -223,10 +142,10 @@ async def test_discover_stagelinq_device_bind_error(
 
     dummy_socket.socket.return_value.bind.side_effect = Exception()
 
-    assert (
+    with pytest.raises(Exception) as exception:
         await dummy_pystagelinq._discover_stagelinq_device(dummy_ip)
-        == PyStageLinQError.CANNOTBINDSOCKET
-    )
+
+    assert exception.type is Exception
 
 
 def test_get_loop_condition(dummy_pystagelinq):
@@ -257,7 +176,7 @@ async def test_discover_stagelinq_check_initialization(
         dummy_socket.AF_INET, dummy_socket.SOCK_DGRAM
     )
     dummy_socket.socket.return_value.bind.assert_called_once_with(
-        ("255.255.255.255", dummy_pystagelinq.StageLinQ_discovery_port)
+        (dummy_ip, dummy_pystagelinq.StageLinQ_discovery_port)
     )
     dummy_socket.socket.return_value.setblocking.assert_called_once_with(False)
 
@@ -291,7 +210,6 @@ async def test_discover_stagelinq_timeout(
         == PyStageLinQError.DISCOVERYTIMEOUT
     )
 
-    sleep_mock.assert_called_once_with(0.1)
     select_mock.select.assert_called_once_with(
         [dummy_socket.socket.return_value], [], [], 0
     )
@@ -329,7 +247,6 @@ async def test_discover_stagelinq_bad_frame(
 
     assert await dummy_pystagelinq._discover_stagelinq_device(dummy_ip) is None
 
-    sleep_mock.assert_called_once_with(0.1)
     select_mock.select.assert_called_once_with(
         [dummy_socket.socket.return_value], [], [], 0
     )
@@ -353,10 +270,10 @@ async def test_discover_stagelinq_bad_port(
 
     class discovery_dummy:
         decode_frame = Mock(side_effect=[PyStageLinQError.STAGELINQOK])
+        device_name = "Not Python"
         get = Mock()
         Port = 0
 
-    stagelinq_discovery_mock = discovery_dummy()
     monkeypatch.setattr(PyStageLinQ.PyStageLinQ, "StageLinQDiscovery", discovery_dummy)
 
     get_loop_condition_mock = Mock()
@@ -371,7 +288,7 @@ async def test_discover_stagelinq_bad_port(
 
     assert await dummy_pystagelinq._discover_stagelinq_device(dummy_ip) is None
 
-    assert time_mock.time.call_count == 2
+    assert time_mock.time.call_count == 1
 
 
 @pytest.mark.asyncio
@@ -395,7 +312,6 @@ async def test_discover_stagelinq_self_name(
         Port = dummy_port
         device_name = name
 
-    stagelinq_discovery_mock = discovery_dummy()
     monkeypatch.setattr(PyStageLinQ.PyStageLinQ, "StageLinQDiscovery", discovery_dummy)
 
     get_loop_condition_mock = Mock()
@@ -410,7 +326,7 @@ async def test_discover_stagelinq_self_name(
 
     assert await dummy_pystagelinq._discover_stagelinq_device(dummy_ip) is None
 
-    assert time_mock.time.call_count == 2
+    assert time_mock.time.call_count == 1
 
 
 @pytest.mark.asyncio
@@ -699,6 +615,34 @@ async def test_start_stagelinq(dummy_pystagelinq, monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_start_stagelinq_disc_msg_not_sent(
+    dummy_pystagelinq, monkeypatch, dummy_PyStageLinQ_network_interface
+):
+    create_task_mock = Mock()
+    monkeypatch.setattr(
+        PyStageLinQ.PyStageLinQ.asyncio, "create_task", create_task_mock
+    )
+
+    _periodic_announcement_mock = Mock()
+    monkeypatch.setattr(
+        dummy_pystagelinq, "_periodic_announcement", _periodic_announcement_mock
+    )
+
+    _py_stagelinq_strapper_mock = Mock()
+    monkeypatch.setattr(
+        dummy_pystagelinq, "_py_stagelinq_strapper", _py_stagelinq_strapper_mock
+    )
+
+    dummy_pystagelinq.network_interface.send_desc_on_all_if = MagicMock(
+        side_effect=[False, False, True]
+    )
+
+    await dummy_pystagelinq._start_stagelinq()
+
+    assert dummy_pystagelinq.network_interface.send_desc_on_all_if.call_count == 3
+
+
+@pytest.mark.asyncio
 async def test_start_stagelinq_standalone(dummy_pystagelinq, monkeypatch):
     create_task_mock = Mock()
     monkeypatch.setattr(
@@ -883,7 +827,7 @@ async def test_periodic_announcement(dummy_pystagelinq, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_py_stagelinq_strapper(dummy_pystagelinq, monkeypatch, dummy_ip):
+async def test_py_stagelinq_strapper(dummy_pystagelinq, monkeypatch):
     discover_device_mock = AsyncMock()
     monkeypatch.setattr(
         dummy_pystagelinq, "_discover_stagelinq_device", discover_device_mock
@@ -891,12 +835,12 @@ async def test_py_stagelinq_strapper(dummy_pystagelinq, monkeypatch, dummy_ip):
 
     await dummy_pystagelinq._py_stagelinq_strapper()
 
-    discover_device_mock.assert_called_once_with(dummy_ip, timeout=2)
+    discover_device_mock.assert_called_once_with("", timeout=2)
 
 
 @pytest.mark.asyncio
 async def test_py_stagelinq_strapper_loop_condition_false(
-    dummy_pystagelinq, monkeypatch, dummy_ip
+    dummy_pystagelinq, monkeypatch
 ):
     get_loop_condition_mock = Mock(side_effect=[False])
     monkeypatch.setattr(
@@ -909,7 +853,7 @@ async def test_py_stagelinq_strapper_loop_condition_false(
 
     await dummy_pystagelinq._py_stagelinq_strapper()
 
-    discover_device_mock.assert_called_once_with(dummy_ip, timeout=2)
+    discover_device_mock.assert_called_once_with("", timeout=2)
 
 
 @pytest.mark.asyncio
@@ -958,6 +902,21 @@ def test_stop(dummy_pystagelinq, monkeypatch):
     dummy_pystagelinq.stop()
 
     stop_mock.assert_called_once_with()
+
+
+def test__stop_fail_to_send(dummy_pystagelinq, monkeypatch):
+    send_discovery_frame_mock = Mock(side_effect=Exception())
+
+    monkeypatch.setattr(
+        dummy_pystagelinq.network_interface,
+        "send_discovery_frame",
+        send_discovery_frame_mock,
+    )
+
+    with pytest.raises(Exception) as exception:
+        dummy_pystagelinq._stop()
+
+    assert exception.type is Exception
 
 
 def test___del__(dummy_pystagelinq, monkeypatch):

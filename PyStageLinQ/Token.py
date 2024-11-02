@@ -25,11 +25,14 @@ class StageLinQToken:
         """
         randomized_bytes = self._get_randomized_bytes(self.TOKENLENGTH)
 
-        # check if first bit is set and set bit to 0 if so.
-        if randomized_bytes[0] >= 128:
-            randomized_bytes[0] = randomized_bytes[0] - 128
+        # The following checks are to solve issues with invalid token values I've found when testing. The actual token
+        # structure is currently unknown, so a random value is generated as this seems to be what's going on from the
+        # devices I've tested against.
+        invalid_token_bit_mask = ~(0x1 << 127 | 0xC << 60)
 
-        self.token = int.from_bytes(randomized_bytes, byteorder="big")
+        self.token = (
+            int.from_bytes(randomized_bytes, byteorder="big") & invalid_token_bit_mask
+        )
 
     @staticmethod
     def _get_randomized_bytes(length: int) -> bytes:

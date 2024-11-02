@@ -89,7 +89,7 @@ isn't properly tested and may cause unexpected issues. As this file is not part 
 be found on [GitHub](https://github.com/Jaxc/PyStageLinQ/blob/main/tools/StageLinQ.lua)
 
 # Compatability
-PyStageLinQ has been tested with a Denon DJ Prime Go on Windows 10 and Linux (Mint 20.3) with Python 3.10. 
+PyStageLinQ has been tested with a Denon DJ Prime Go on Windows 11 and Linux (Mint 22.2) with Python 3.10. 
 
 # Acknowledgements
 Big thanks to icedream for his implementation of StageLinQ in go:

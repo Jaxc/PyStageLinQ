@@ -53,12 +53,22 @@ def state_map_data_print(data):
 def main():
     logging.basicConfig(level=logging.INFO)
     global PrimeGo
-    """PrimeGo = PyStageLinQ.PyStageLinQ(
-        new_device_found_callback, name="Jaxcie StageLinQ", ip="169.254.13.37"
-    )"""
-    PrimeGo = PyStageLinQ.PyStageLinQ(
-        new_device_found_callback, name="Jaxcie StageLinQ"
-    )
+    ip_choice = 1
+    match ip_choice:
+        case 0:
+            PrimeGo = PyStageLinQ.PyStageLinQ(
+                new_device_found_callback, name="Jaxcie StageLinQ"
+            )
+        case 1:
+            PrimeGo = PyStageLinQ.PyStageLinQ(
+                new_device_found_callback, name="Jaxcie StageLinQ", ip="169.254.13.37"
+            )
+        case 2:
+            PrimeGo = PyStageLinQ.PyStageLinQ(
+                new_device_found_callback,
+                name="Jaxcie StageLinQ",
+                ip=["169.254.13.37", "127.0.0.1"],
+            )
     PrimeGo.start_standalone()
 
 

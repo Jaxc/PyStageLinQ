@@ -33,14 +33,12 @@ def test_generate_token_zero(token, monkeypatch):
 
 def test_generate_token_msb1(token, monkeypatch):
     def mock_random_msb1(length):
-        return bytearray(
-            int("80000000000000000000000000000001", length).to_bytes(length, "big")
-        )
+        return bytearray(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF.to_bytes(length, "big"))
 
     monkeypatch.setattr(token, "_get_randomized_bytes", mock_random_msb1)
 
     token.generate_token()
-    assert token.get_token() == 1
+    assert token.get_token() == 0x7FFFFFFFFFFFFFFF3FFFFFFFFFFFFFFF
 
 
 def test_set_token_wrong_input_type(token):
