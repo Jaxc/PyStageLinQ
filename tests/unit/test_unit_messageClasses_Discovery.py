@@ -4,6 +4,8 @@ import PyStageLinQ.Token
 import PyStageLinQ.DataClasses
 import random
 
+random.seed(35)
+
 from PyStageLinQ.ErrorCodes import PyStageLinQError
 
 device_name_dummy = "AAAA"
