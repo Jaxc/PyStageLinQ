@@ -22,7 +22,7 @@ keywords = ["StageLinQ", "DJ", "VJ", "Denon DJ", "Prime Go", "Streaming"]
 version = "0.0.0"
 
 dependencies = [
-"psutil",
+"psutil==6.1.0",
 ]
 
 [project.urls]
