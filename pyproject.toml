@@ -41,3 +41,15 @@ testpaths = [
 pythonpath = [
   "."
 ]
+
+[tool.hatch.build]
+exclude = [
+    ".circleci/",
+    ".github/",
+    ".gitignore",
+    "*.md",
+    "tests/",
+    "docs/",
+    "tools/",
+    "make_release.sh",
+]
