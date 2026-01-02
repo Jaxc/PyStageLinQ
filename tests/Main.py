@@ -40,14 +40,31 @@ def new_device_found_callback(ip, discovery_frame, service_list):
     # Request StateMap service
     for service in service_list:
         if service.service == "StateMap":
+            continue
             PrimeGo.subscribe_to_statemap(
                 service, EngineServices.prime_go, state_map_data_print
+            )
+        if service.service == "BeatInfo":
+            PrimeGo.subscribe_to_beatinfo(
+                service, beat_info_data_print
             )
 
 
 def state_map_data_print(data):
     for message in data:
         print(message)
+
+last_timestamp=0
+last_timeline=0
+def beat_info_data_print(data):
+
+    #print(f"beat: {data.deck2.currentBeat}\tbeattotal = {data.deck2.trackTotalBeats}\tbpm: {data.deck2.currentBPM}\ttimeline: {hex(data.deck2.timeline)}")
+
+    print(
+        f"timestamp: {hex(data.clock)}\ttimeline: {hex(data.deck2.timeline)}")
+
+#    last_timestamp = data.clock
+#    last_timline = data.data.deck2.timeline
 
 
 def main():

@@ -8,7 +8,6 @@ import socket
 import time
 import asyncio
 import logging
-import platform
 import psutil
 import ipaddress
 from typing import Callable
@@ -291,7 +290,7 @@ class PyStageLinQ:
         state_map_service: EngineServices.ServiceHandle,
         subscription_list: dict,
         data_available_callback: Callable[[list[StageLinQStateMapData]], None] = None,
-    ) -> None:
+    ) -> int:
         """
         This function is used to subscribe to a statemap service provided by a StageLinQ device.
                 :param state_map_service: This parameter is used to determine if
@@ -310,6 +309,22 @@ class PyStageLinQ:
         )
         return PyStageLinQError.STAGELINQOK
 
+    # beat_info_service """: EngineBeatInfo.BeatInfoHandle""", subscription_list: dict, data_available_callback: Callable[[list[StageLinQStateMapData]], None] = None
+    def subscribe_to_beatinfo(self, beat_info_service: EngineServices.ServiceHandle, data_available_callback) -> int:
+        if beat_info_service.service != "BeatInfo":
+            logger.warning(f'{beat_info_service.service} is not of type "BeatInfo"')
+            return PyStageLinQError.SERVICENOTRECOGNIZED
+
+        # Defer task creation to avoid blocking the calling function
+        asyncio.create_task(
+            self._subscribe_to_beatinfo(
+                beat_info_service, data_available_callback
+            )
+        )
+        return PyStageLinQError.STAGELINQOK
+
+
+
     async def _subscribe_to_statemap(
         self, state_map_service, subscription_list, data_available_callback
     ):
@@ -320,6 +335,20 @@ class PyStageLinQ:
 
         self.tasks.add(state_map.get_task())
         logger.debug(f"Subscription to StateMap successful.")
+
+    async def _subscribe_to_beatinfo(
+        self, state_map_service, data_available_callback
+    ):
+        beat_info = EngineServices.beatinfoSubscription(
+            state_map_service, data_available_callback
+        )
+        await beat_info.subscribe(self.OwnToken)
+
+        self.tasks.add(beat_info.get_task())
+        logger.debug(f"Subscription to BeatInfo successful, sending flag to start receiving data.")
+
+        await beat_info.start()
+
 
     async def _start_stagelinq(self, standalone=False):
         # Start the initial tasks of the library

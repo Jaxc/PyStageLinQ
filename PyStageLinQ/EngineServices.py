@@ -5,12 +5,16 @@ This code is licensed under MIT license (see LICENSE for details)
 
 from dataclasses import dataclass
 import asyncio
-from typing import Callable
+from typing import Callable, Any
+import logging
 
 from . import DataClasses, Token
 from .MessageClasses import StageLinQServiceAnnouncement, StageLinQMessage
 from .DataClasses import StageLinQServiceAnnouncementData
 import json
+from struct import unpack
+
+logger = logging.getLogger("PyStageLinQ")
 
 prime_go = {
     "ClientLibrarianDevicesControllerCurrentDevice": "/Client/Librarian/DevicesController/CurrentDevice",
@@ -334,7 +338,6 @@ common_functions = {
     "MixerCrossfaderPosition": "/Mixer/CrossfaderPosition",
 }
 
-
 @dataclass
 class ServiceHandle:
     device: str
@@ -342,6 +345,22 @@ class ServiceHandle:
     service: str
     port: int
 
+
+@dataclass
+class DeckBeatInfo:
+    currentBeat: float
+    trackTotalBeats: float
+    currentBPM: float
+    timeline: int
+
+
+@dataclass
+class BeatInfoData:
+    clock: int
+    deck1: DeckBeatInfo
+    deck2: DeckBeatInfo
+    deck3: DeckBeatInfo
+    deck4: DeckBeatInfo
 
 class StateMapSubscription:
     def __init__(
@@ -496,3 +515,91 @@ class StateMapSubscription:
             await self.writer.drain()
         # small sleep to actually send frame
         await asyncio.sleep(0.001)
+
+
+class beatinfoSubscription:
+    start_message = bytearray([0x0, 0x0, 0x0, 0x4, 0x0, 0x0, 0x0, 0x0])
+    def __init__(
+        self,
+        service_handle: ServiceHandle,
+        data_callback: Callable[[list[DataClasses.StageLinQStateMapData]], None],
+    ) -> None:
+        self.service_handle: ServiceHandle = service_handle
+        self._callback = data_callback
+        self.reader = None
+        self.writer = None
+        self.beat_info_task = None
+
+    def get_task(self) -> asyncio.Task:
+        return self.beat_info_task
+
+    async def subscribe(self, own_token: Token.StageLinQToken) -> None:
+        self.reader, self.writer = await asyncio.open_connection(
+            self.service_handle.ip, self.service_handle.port
+        )
+        self.writer.write(
+            StageLinQServiceAnnouncement().encode_frame(
+                StageLinQServiceAnnouncementData(
+                    Token=own_token,
+                    Service=self.service_handle.service,
+                    Port=self.writer.transport.get_extra_info("sockname")[1],
+                )
+            )
+        )
+        await self.writer.drain()
+
+        self.beat_info_task = asyncio.create_task(self.read_beat_info())
+
+    async def read_frame(self) -> tuple[int, bytes]:
+        # First four bytes are the length of the rest of the frame, so this is read out separately first
+        frame_size = await self.reader.read(4)
+        frame_payload =int.from_bytes(frame_size[0:4], byteorder="big")
+        frame = await self.reader.read(frame_payload)
+        # Add data from last received frame
+        return frame_payload, frame
+
+    async def read_beat_info(self) -> None:
+        while True:
+            length, frame = await self.read_frame()
+
+            if len(frame) == 0:
+                return
+
+            beatinfo = self.decode_frame(frame)
+
+            if self._callback is not None:
+                self._callback(beatinfo)
+
+    async def start(self):
+        self.writer.write(self.start_message)
+        self.writer.drain()
+
+    def decode_frame(self, frame: bytes) -> [list[bytes], bytearray]:
+        # Could this be the number of decks?
+        if b'\x00\x00\x00\x02' != frame[0:4]:
+            logger.debug(f"Invalid BeatInfo Frame header {frame[0:4]}!")
+
+        deck1 = DeckBeatInfo(
+            unpack(">d" ,frame[16:24])[0],
+            unpack(">d" ,frame[24:32])[0],
+            unpack(">d" ,frame[32:40])[0],
+            int.from_bytes(frame[64:72], byteorder="big"),
+        )
+
+        deck2 = DeckBeatInfo(
+            unpack(">d" ,frame[40:48])[0],
+            unpack(">d" ,frame[48:56])[0],
+            unpack(">d" ,frame[56:64])[0],
+            int.from_bytes(frame[72:80], byteorder="big"),
+        )
+
+
+        beatinfo = BeatInfoData(
+            int.from_bytes(frame[4:12], byteorder="big"),
+            deck1,
+            deck2,
+            None,
+            None,
+        )
+
+        return beatinfo
