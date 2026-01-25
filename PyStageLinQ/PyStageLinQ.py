@@ -39,6 +39,9 @@ class PyStageLinQ_network_interface:
         self.target_interfaces = []
         self.discovery_port = discovery_port
         self.get_interface_from_ip(ip)
+        logger.info(f"Found {len(self.target_interfaces)} network interfaces:")
+        for iface in self.target_interfaces:
+            logger.info(f"  - {iface.name}: {iface.addr_str}")
 
     def get_interface_from_ip(self, ip):
         if ip is None:
@@ -73,21 +76,19 @@ class PyStageLinQ_network_interface:
 
     def send_discovery_frame(self, discovery_frame):
         for interface in self.target_interfaces:
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as discovery_socket:
-                discovery_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-                discovery_socket.bind((interface.addr_str, 0))
-                try:
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as discovery_socket:
+                    discovery_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+                    discovery_socket.bind((interface.addr_str, 0))
                     discovery_socket.sendto(
                         discovery_frame,
                         ("255.255.255.255", self.discovery_port),
                     )
                     self.target_interfaces[interface.id].n_disc_msg_send += 1
-                except PermissionError:
-                    logger.warning(
-                        f"Cannot send message on interface {interface.name}, "
-                        f"this error could be due to that there is no network interface set up with this IP range"
-                    )
-                    raise PermissionError
+            except Exception as e:
+                logger.debug(
+                    f"Cannot send discovery on interface {interface.name} ({interface.addr_str}): {e}"
+                )
 
     def determine_interface_of_remote_ip(self, ip):
         for interface in self.target_interfaces:
@@ -99,13 +100,13 @@ class PyStageLinQ_network_interface:
         return None
 
     def send_desc_on_all_if(self):
+        # Check if at least one working interface has sent 3+ discovery messages
+        any_working = False
         for interface in self.target_interfaces:
-            # Wait until a few discovery frames have been sent to make sure the other devices have seen us. If they have
-            # not and we are asking for services it will be denied.
-            if interface.n_disc_msg_send < 3:
-                return False
-
-        return True
+            # Skip interfaces that have failed (never sent any messages after multiple attempts)
+            if interface.n_disc_msg_send >= 3:
+                any_working = True
+        return any_working
 
 
 class PyStageLinQ:
@@ -191,7 +192,6 @@ class PyStageLinQ:
             logger.info(f"Gracefully shutdown complete")
         except Exception as e:
             logger.debug('Could not send "EXIT" discovery frame during shutdown')
-            raise e
 
     def _announce_self(self):
         discovery = StageLinQDiscovery()
@@ -220,10 +220,10 @@ class PyStageLinQ:
             )  # bind socket to broadcast
         except Exception as e:
             # Cannot bind to socket, check if IP is correct and link is up
-            logger.warning(
+            logger.debug(
                 f"Cannot bind to IP socket: {host_ip} on port {self.StageLinQ_discovery_port}"
             )
-            raise e
+            return PyStageLinQError.CANNOTBINDSOCKET
         discover_socket.setblocking(False)
 
         loop_timeout = time.time() + timeout
@@ -361,11 +361,13 @@ class PyStageLinQ:
 
     async def _py_stagelinq_strapper(self):
         strapper_tasks = set()
-        logger.info(f"Starting to look for StageLinQ discovery frames:")
+        logger.info(f"Looking for discovery frames on {len(self.network_interface.target_interfaces)} IP addresses:")
 
-        strapper_tasks.add(
-            asyncio.create_task(self._discover_stagelinq_device("", timeout=2))
-        )
+        for interface in self.network_interface.target_interfaces:
+            logger.info(f"{interface.addr_str}")
+            strapper_tasks.add(
+                asyncio.create_task(self._discover_stagelinq_device(interface.addr_str, timeout=2))
+            )
 
         while self.get_loop_condition():
             all_tasks_done = True
