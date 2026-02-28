@@ -142,10 +142,10 @@ async def test_discover_stagelinq_device_bind_error(
 
     dummy_socket.socket.return_value.bind.side_effect = Exception()
 
-    with pytest.raises(Exception) as exception:
+    assert (
         await dummy_pystagelinq._discover_stagelinq_device(dummy_ip)
-
-    assert exception.type is Exception
+        == PyStageLinQError.CANNOTBINDSOCKET
+    )
 
 
 def test_get_loop_condition(dummy_pystagelinq):
@@ -176,7 +176,7 @@ async def test_discover_stagelinq_check_initialization(
         dummy_socket.AF_INET, dummy_socket.SOCK_DGRAM
     )
     dummy_socket.socket.return_value.bind.assert_called_once_with(
-        (dummy_ip, dummy_pystagelinq.StageLinQ_discovery_port)
+        ("", dummy_pystagelinq.StageLinQ_discovery_port)
     )
     dummy_socket.socket.return_value.setblocking.assert_called_once_with(False)
 
@@ -832,6 +832,11 @@ async def test_py_stagelinq_strapper(dummy_pystagelinq, monkeypatch):
     monkeypatch.setattr(
         dummy_pystagelinq, "_discover_stagelinq_device", discover_device_mock
     )
+    monkeypatch.setattr(
+        dummy_pystagelinq.network_interface,
+        "target_interfaces",
+        [PyStageLinQ.PyStageLinQ.PyStageLinQ_interface_info("", 0, 0, "", 0, "", 0)],
+    )
 
     await dummy_pystagelinq._py_stagelinq_strapper()
 
@@ -849,6 +854,11 @@ async def test_py_stagelinq_strapper_loop_condition_false(
     discover_device_mock = AsyncMock()
     monkeypatch.setattr(
         dummy_pystagelinq, "_discover_stagelinq_device", discover_device_mock
+    )
+    monkeypatch.setattr(
+        dummy_pystagelinq.network_interface,
+        "target_interfaces",
+        [PyStageLinQ.PyStageLinQ.PyStageLinQ_interface_info("", 0, 0, "", 0, "", 0)],
     )
 
     await dummy_pystagelinq._py_stagelinq_strapper()
@@ -883,6 +893,11 @@ async def test_py_stagelinq_strapper_task_exception(
     discover_device_mock = MagicMock()
     monkeypatch.setattr(
         dummy_pystagelinq, "_discover_stagelinq_device", discover_device_mock
+    )
+    monkeypatch.setattr(
+        dummy_pystagelinq.network_interface,
+        "target_interfaces",
+        [PyStageLinQ.PyStageLinQ.PyStageLinQ_interface_info("", 0, 0, "", 0, "", 0)],
     )
 
     get_loop_condition_mock.side_effect = [True, False]

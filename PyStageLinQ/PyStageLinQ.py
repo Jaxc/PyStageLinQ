@@ -11,6 +11,7 @@ import logging
 import platform
 import psutil
 import ipaddress
+import os
 from typing import Callable
 
 from . import Device
@@ -39,9 +40,6 @@ class PyStageLinQ_network_interface:
         self.target_interfaces = []
         self.discovery_port = discovery_port
         self.get_interface_from_ip(ip)
-        logger.info(f"Found {len(self.target_interfaces)} network interfaces:")
-        for iface in self.target_interfaces:
-            logger.info(f"  - {iface.name}: {iface.addr_str}")
 
     def get_interface_from_ip(self, ip):
         if ip is None:
@@ -55,30 +53,43 @@ class PyStageLinQ_network_interface:
             ip_list = ip
         else:
             raise TypeError
+        logger.info(
+            f"Found {len(psutil.net_if_stats().items())} total network interfaces, listing IPv4 interfaces:"
+        )
 
         for interface in psutil.net_if_stats().items():
             for interface_info in psutil.net_if_addrs()[interface[0]]:
                 # Only look for IPV4 binds
-                if socket.AF_INET == interface_info.family and (
-                    interface_info.address in ip_list or ip_list[0] == "any"
-                ):
-                    self.target_interfaces.append(
-                        PyStageLinQ_interface_info(
-                            interface[0],
-                            len(self.target_interfaces),
-                            int(ipaddress.IPv4Address(interface_info.address)),
-                            interface_info.address,
-                            int(ipaddress.IPv4Address(interface_info.netmask)),
-                            interface[1],
-                            0,
+                if socket.AF_INET == interface_info.family:
+                    logger.info(f"  - {interface[0]}: {interface_info.address}")
+                    if interface_info.address in ip_list or ip_list[0] == "any":
+                        self.target_interfaces.append(
+                            PyStageLinQ_interface_info(
+                                interface[0],
+                                len(self.target_interfaces),
+                                int(ipaddress.IPv4Address(interface_info.address)),
+                                interface_info.address,
+                                int(ipaddress.IPv4Address(interface_info.netmask)),
+                                interface[1],
+                                0,
+                            )
                         )
-                    )
+
+        logger.info(
+            f"{len(self.target_interfaces)} interfaces matched with requested interfaces and will be used by PyStageLinQ:"
+        )
+        for iface in self.target_interfaces:
+            logger.info(f"  - {iface.name}: {iface.addr_str}")
 
     def send_discovery_frame(self, discovery_frame):
         for interface in self.target_interfaces:
             try:
-                with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as discovery_socket:
-                    discovery_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+                with socket.socket(
+                    socket.AF_INET, socket.SOCK_DGRAM
+                ) as discovery_socket:
+                    discovery_socket.setsockopt(
+                        socket.SOL_SOCKET, socket.SO_BROADCAST, 1
+                    )
                     discovery_socket.bind((interface.addr_str, 0))
                     discovery_socket.sendto(
                         discovery_frame,
@@ -182,16 +193,13 @@ class PyStageLinQ:
 
     def _stop(self):
         logger.info(f"Stop requested, trying graceful shutdown")
-        try:
-            discovery = StageLinQDiscovery()
-            discovery_info = self.discovery_info
-            discovery_info.ConnectionType = ConnectionTypes.EXIT
-            discovery_frame = discovery.encode_frame(discovery_info)
+        discovery = StageLinQDiscovery()
+        discovery_info = self.discovery_info
+        discovery_info.ConnectionType = ConnectionTypes.EXIT
+        discovery_frame = discovery.encode_frame(discovery_info)
 
-            self.network_interface.send_discovery_frame(discovery_frame)
-            logger.info(f"Gracefully shutdown complete")
-        except Exception as e:
-            logger.debug('Could not send "EXIT" discovery frame during shutdown')
+        self.network_interface.send_discovery_frame(discovery_frame)
+        logger.info(f"Gracefully shutdown complete")
 
     def _announce_self(self):
         discovery = StageLinQDiscovery()
@@ -214,9 +222,11 @@ class PyStageLinQ:
         # Create socket
         discover_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
+        bind_ip = "" if os.name == "posix" else host_ip
+
         try:
             discover_socket.bind(
-                (host_ip, self.StageLinQ_discovery_port)
+                (bind_ip, self.StageLinQ_discovery_port)
             )  # bind socket to broadcast
         except Exception as e:
             # Cannot bind to socket, check if IP is correct and link is up
@@ -361,12 +371,16 @@ class PyStageLinQ:
 
     async def _py_stagelinq_strapper(self):
         strapper_tasks = set()
-        logger.info(f"Looking for discovery frames on {len(self.network_interface.target_interfaces)} IP addresses:")
+        logger.info(
+            f"Looking for discovery frames on {len(self.network_interface.target_interfaces)} IP addresses:"
+        )
 
         for interface in self.network_interface.target_interfaces:
             logger.info(f"{interface.addr_str}")
             strapper_tasks.add(
-                asyncio.create_task(self._discover_stagelinq_device(interface.addr_str, timeout=2))
+                asyncio.create_task(
+                    self._discover_stagelinq_device(interface.addr_str, timeout=2)
+                )
             )
 
         while self.get_loop_condition():

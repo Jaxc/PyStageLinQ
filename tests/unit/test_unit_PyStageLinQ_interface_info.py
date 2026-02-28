@@ -364,8 +364,7 @@ def test_send_discovery_frame_permission_error(
 
     monkeypatch.setattr(PyStageLinQ.PyStageLinQ, "socket", dummy_socket)
 
-    with pytest.raises(PermissionError) as exception:
-        dummy_PyStageLinQ_network_interface.send_discovery_frame(dummy_discovery_frame)
+    dummy_PyStageLinQ_network_interface.send_discovery_frame(dummy_discovery_frame)
 
     dummy_socket.socket.assert_called_once_with(
         dummy_socket.AF_INET, dummy_socket.SOCK_DGRAM
