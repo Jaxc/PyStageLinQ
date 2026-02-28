@@ -7,6 +7,8 @@ on:
 jobs:
   fast_forward_job:
     name: Fast Forward
+    permissions:
+      contents: write
     if: github.event.issue.pull_request != '' && contains(github.event.comment.body, '/fast-forward')
     runs-on: ubuntu-latest
     steps:
