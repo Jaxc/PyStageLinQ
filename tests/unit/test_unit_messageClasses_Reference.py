@@ -6,7 +6,6 @@ import random
 
 from PyStageLinQ.ErrorCodes import PyStageLinQError
 
-
 service_dummy = "AAAA"
 own_token = "BBBB"
 device_token = "CCCC"
