@@ -70,7 +70,7 @@ def beat_info_data_print(data):
 def main():
     logging.basicConfig(level=logging.INFO)
     global PrimeGo
-    ip_choice = 1
+    ip_choice = 3
     match ip_choice:
         case 0:
             PrimeGo = PyStageLinQ.PyStageLinQ(
@@ -86,6 +86,12 @@ def main():
                 name="Jaxcie StageLinQ",
                 ip=["169.254.13.37", "127.0.0.1"],
             )
+        case 3:
+            # should fail
+            PrimeGo = PyStageLinQ.PyStageLinQ(
+                new_device_found_callback, name="Jaxcie StageLinQ", ip="127.0.0.1"
+            )
+
     PrimeGo.start_standalone()
 
 

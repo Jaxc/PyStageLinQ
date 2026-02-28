@@ -10,6 +10,7 @@ import asyncio
 import logging
 import psutil
 import ipaddress
+import os
 from typing import Callable
 
 from . import Device
@@ -213,9 +214,11 @@ class PyStageLinQ:
         # Create socket
         discover_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
+        bind_ip = "" if os.name == "posix" else host_ip
+
         try:
             discover_socket.bind(
-                (host_ip, self.StageLinQ_discovery_port)
+                (bind_ip, self.StageLinQ_discovery_port)
             )  # bind socket to broadcast
         except Exception as e:
             # Cannot bind to socket, check if IP is correct and link is up
