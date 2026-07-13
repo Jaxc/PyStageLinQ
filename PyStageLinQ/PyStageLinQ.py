@@ -31,7 +31,7 @@ class PyStageLinQ_interface_info:
     addr: int
     addr_str: str
     mask: int
-    status: psutil._common.snicstats
+    status: psutil._ntuples.snicstats
     n_disc_msg_send: int
 
 
