@@ -12,14 +12,13 @@
 #
 import os
 import sys
-import sphinx_rtd_theme
 
 sys.path.insert(0, os.path.abspath(".."))
 
 # -- Project information -----------------------------------------------------
 
 project = "PyStageLinQ"
-copyright = "2024, Jaxcie"
+copyright = "2026, Jaxcie"
 author = "Jaxcie"
 
 # The full version, including alpha/beta/rc tags
@@ -30,7 +29,7 @@ release = "0.0.0"
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx_rtd_theme", "myst_parser", "sphinx.ext.autodoc"]
+extensions = ["sphinx_rtd_theme", "myst_parser", "sphinx.ext.autodoc", "sphinxcontrib.plantuml"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

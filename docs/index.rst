@@ -1,7 +1,7 @@
 PyStageLinQ
 =======================================
 
- Python implementation of a StagelinQ protocol
+ Python implementation of the StagelinQ protocol
 
 .. toctree::
    :maxdepth: 2
@@ -9,9 +9,15 @@ PyStageLinQ
 
    readme_link
 
-   changelog_link
+   Usage
+
+   StageLinQ_services
 
    api
+
+   changelog_link
+
+   innerworkings
 
 Indices and tables
 ==================

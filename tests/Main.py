@@ -31,11 +31,11 @@ def new_device_found_callback(ip, discovery_frame, service_list):
 
     if len(service_list) > 0:
         print("Services found in device:")
+        for service in service_list:
+            print(f"\t{service.service} on port {service.port}")
     else:
         print("No services found")
-
-    for service in service_list:
-        print(f"\t{service.service} on port {service.port}")
+        return
 
     # Request StateMap service
     for service in service_list:

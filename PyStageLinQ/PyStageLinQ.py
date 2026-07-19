@@ -122,16 +122,16 @@ class PyStageLinQ_network_interface:
 
 class PyStageLinQ:
     """
-    The main object for PyStageLinQ. Use this object to first initialize and then start PyStageLinq
+The main object for PyStageLinQ. Use this object to first initialize and then start PyStageLinq.
 
-    :param new_device_found_callback: This callback is used to report back to the application when a StageLinQ
+:param new_device_found_callback: This callback is used to report back to the application when a StageLinQ
     device has been detected on the network. It is then up to the application to determine what device has been
     and how if it wants to connect to it.
 
-    :param name: This is the name which PyStageLinQ will announce itself with on the StageLinQ protocol. If not
+:param name: This is the name which PyStageLinQ will announce itself with on the StageLinQ protocol. If not
     set it defaults to "Hello StageLinQ World".
 
-    :param ip: This is the ip of the interface you want to bind the sockets to, e.g. your local ethernet IP. If set to
+:param ip: This is the ip of the interface you want to bind the sockets to, e.g. your local ethernet IP. If set to
     None all interfaces will be used.
 
     """
@@ -144,7 +144,7 @@ class PyStageLinQ:
     def __init__(
         self,
         new_device_found_callback: Callable[
-            [str, StageLinQDiscovery, EngineServices.ServiceHandle], None
+            [str, StageLinQDiscovery, list[EngineServices.ServiceHandle]], None
         ],
         name: str = "Hello StageLinQ World",
         ip=None,
@@ -176,7 +176,7 @@ class PyStageLinQ:
     def start_standalone(self):
         """
         Function for starting PyStageLinq in standalone mode. In this mode this function will not return, but
-        instead start asyncio and que up tasks. This function shall be called once the PyStageLinQ object has been
+        instead start asyncio and queue up tasks. This function shall be called once the PyStageLinQ object has been
         initialized.
         """
         logger.debug(f"Starting in standalone mode.")
@@ -303,10 +303,13 @@ class PyStageLinQ:
         data_available_callback: Callable[[list[StageLinQStateMapData]], None] = None,
     ) -> None:
         """
-        This function is used to subscribe to a statemap service provided by a StageLinQ device.
-                :param state_map_service: This parameter is used to determine if
-                :param subscription_list: list of serivces that the application wants to subscribe to
-                :param data_available_callback: Callback for when data is available from StageLinQ device
+This function is used to subscribe to a statemap service provided by a StageLinQ device.
+
+:param state_map_service: Contains information about the service to be subscribed to.
+
+:param subscription_list: list of serivces that the application wants to subscribe to.
+
+:param data_available_callback: Callback for when data is available from StageLinQ device.
         """
         if state_map_service.service != "StateMap":
             logger.warning(f'{state_map_service.service} is not of type "Statemap"')
@@ -397,6 +400,10 @@ class PyStageLinQ:
             await asyncio.sleep(1)
 
     def stop(self):
+        """
+Calling stop will attempt to gracefully shut down PyStageLinQ. It will stop sending messages
+and send a termination discovery frame.
+        """
         self._stop()
 
     def __del__(self):

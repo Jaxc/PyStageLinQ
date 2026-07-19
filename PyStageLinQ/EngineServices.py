@@ -117,7 +117,7 @@ prime_go = {
     "EngineDeck2TrackTrackNetworkPath": "/Engine/Deck2/Track/TrackNetworkPath",
     "EngineDeck2TrackTrackURI": "/Engine/Deck2/Track/TrackUri",
     "EngineDeck2TrackTrackWasPlayed": "/Engine/Deck2/Track/TrackWasPlayed",
-    "EngineDeck3CurrentBPM" "EngineDeckCount": "/Engine/DeckCount",
+    "EngineDeckCount": "/Engine/DeckCount",
     "MixerCH1faderPosition": "/Mixer/CH1faderPosition",
     "MixerCH2faderPosition": "/Mixer/CH2faderPosition",
     "MixerCH3faderPosition": "/Mixer/CH3faderPosition",

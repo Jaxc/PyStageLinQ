@@ -15,13 +15,13 @@ protocol.
 
 ### Random info I don't really know where to put
 
-For some reason all ASCII is encoded as 16 bytes, so keep this in mind if when reading data. e.g. every other byte
+For some reason all ASCII is encoded as 16 bits, so keep this in mind if when reading data. e.g. every other byte
 will be 0x00 when text is written. For python encoding "UTF-16be" seems to work
 
 ### Nomenclature
 In this document the following words are used as this:
 
-*StageLinQ device*: A device that can communicate on StageLinq, e.g. DJ equipment, stage lightning controller, or 
+*StageLinQ device*: A device that can communicate on StageLinQ, e.g. DJ equipment, stage lightning controller, or 
 a computer running the software.
 
 *StageLinQ source*: This is used to describe a device that is the source of StageLinQ information,
